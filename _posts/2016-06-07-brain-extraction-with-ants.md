@@ -34,4 +34,6 @@ To see other options, run `antsBrainExtraction.sh`. It will give you a nice help
 
 This will do the brain extraction. Allow it some time. On my home machine it took ~ 1.5 hours. In the end you will have the extracted brain and the brain mask. Make sure to inspect them to see if anything weird is going on!
 
-Please email me your comments and questions until I put up the comment system!
+If you have issues with the extraction such as some parts of eyes or neck left, try using `-f <brainRegistrationMask>` option. In case of OASIS template it is `-f T_template0_BrainCerebellumRegistrationMask.nii.gz`. The mask resolved my issues with brain extraction and reduced computation time by half. 
+
+Please email me your comments and questions!

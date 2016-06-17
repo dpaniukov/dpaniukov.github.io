@@ -83,9 +83,10 @@ Paniukov, D., Cheon, J., & Crooks, S. (2011, October 22). *Implementation of Mul
 * Distance learning (Fall 2012)  
 
 ## Other Skills
-**Statistical software:** R, Python statistical packages, SPSS  
-**fMRI software:** FSL, Pymvpa, Nipype, ANTs, FreeSurfer  
-**Programming languages:** Python, R, Unix-based shell-scripts, Java-Script, HTML  
+**Statistical Software:** R, Python statistical packages, SPSS  
+**fMRI Software:** FSL, Pymvpa, Nipype, ANTs, FreeSurfer  
+**Programming Languages:** Python, R, Unix-based shell-scripts, Java-Script, HTML  
+**CrowdSourcing:** Amazon Mechanical Turk, psiTurk, Qualtrics
 
 ## Current affiliation with professional organizations  
 * Society for Neuroscience
