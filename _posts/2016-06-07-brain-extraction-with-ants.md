@@ -10,6 +10,12 @@ Today we will be talking about how to do a brain extraction on T1 anatomical ima
 
 Although ANTs is shipped in [binaries](https://github.com/stnava/ANTs/releases), they did not work on my Ubuntu installation, so I had to use sources, which is the recommended way to install ANTs. Here is [how to build and install them](https://brianavants.wordpress.com/2012/04/13/updated-ants-compile-instructions-april-12-2012/). The building process takes a while.
 
+Do not forget to put ANTs in your environment, specifically put these line to your bash profile:
+{% highlight bash %}
+export PATH=<path_to_your_home>/antsbin/bin:$PATH
+export ANTSPATH=<path_to_your_home>/antsbin/bin
+{% endhighlight %}
+
 # Brain Extraction with ANTs
 
 First, you will need to have the antsBrainExtraction.sh script to run the brain extraction. You may find it in the <git directory/Scripts> you cloned on the installation step. If you used the binary files, it probably won’t be there. Therefore, you will need to create an empty file called antsBrainExtraction.sh. Now go [here](https://github.com/stnava/ANTs/blob/master/Scripts/antsBrainExtraction.sh), copy all the code to your file and save it. In any case you should end up with the shell script for the brain extraction.
@@ -34,6 +40,6 @@ To see other options, run `antsBrainExtraction.sh`. It will give you a nice help
 
 This will do the brain extraction. Allow it some time. On my home machine it took ~ 1.5 hours. In the end you will have the extracted brain and the brain mask. Make sure to inspect them to see if anything weird is going on!
 
-If you have issues with the extraction such as some parts of eyes or neck left, try using `-f <brainRegistrationMask>` option. In case of OASIS template it is `-f T_template0_BrainCerebellumRegistrationMask.nii.gz`. The mask resolved my issues with brain extraction and reduced computation time by half. 
+If you have issues with the extraction such as some parts of eyes or neck left, try using `-f <brainRegistrationMask>` option. In case of OASIS template it is `-f T_template0_BrainCerebellumRegistrationMask.nii.gz`. The mask resolved my issues with brain extraction and reduced computation time by half.
 
 Please email me your comments and questions!
