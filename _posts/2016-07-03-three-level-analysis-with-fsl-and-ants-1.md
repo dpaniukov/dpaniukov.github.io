@@ -278,12 +278,12 @@ wf.connect(example_func, 'roi_file', datasink, 'bold.example_func')
 
 Shall we run it? For single CPU computer remove `plugin='MultiProc'`, put `reg.inputs.num_threads = 1` and do not try to run subjects in parallel!
 {% highlight python %}
-outgraph = wf.run(plugin='MultiProc')
+results = wf.run(plugin='MultiProc')
 {% endhighlight %}
 
 ### Quality assessment
 
-For the quality assessment, revisit all warped anatomical images and functional images transformed to standard space. For the functional images you can also use FSL's `slices` as:
+For the quality assessment, revisit all warped anatomical images and functional images transformed to standard space. For the functional images you can also use FSL's `slices` in a terminal (in bash, not in python!) as:
 {% highlight bash %}
 slices your_BOLD_image.nii.gz MNI152_T1_2mm_brain.nii.gz -o output_image.gif
 {% endhighlight %}
