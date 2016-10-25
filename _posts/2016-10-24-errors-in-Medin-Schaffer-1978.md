@@ -68,6 +68,7 @@ model(exemplars,trans_stim,exemplars_names,trans_stim_names,pars,5,4)
 
 
 When we compare the answers with the Table 1 from the paper, we will see the **differences** in stimuli 9A, 11A, 3B.  
+
 ![Table 1]({{ site.url }}/assets/medin1.png)
 
 # Experiment 3
