@@ -5,8 +5,7 @@ date: 2016-10-24 12:05:00
 ---
 
 
-Here we will simulate experiments on [Context Theory of Classification Learning](http://groups.psych.northwestern.edu/medin/documents/MedinSchaffer1978PsychRev.pdf) (Medin & Schaffer, 1978).
-
+Today we will simulate experiments on [Context Theory of Classification Learning](http://groups.psych.northwestern.edu/medin/documents/MedinSchaffer1978PsychRev.pdf) (Medin & Schaffer, 1978).
 **Important differences of simulated and published results will be shown**  
 Dr. Medin kindly confirmed the typos in the paper and asked to publish them somewhere.
 
@@ -68,7 +67,7 @@ model(exemplars,trans_stim,exemplars_names,trans_stim_names,pars,5,4)
     16B			0.864824603505
 
 
-When we compare the answers with the Table 1 from the paper, we will see the **differences** in stimuli 9A, 11A, 3B.
+When we compare the answers with the Table 1 from the paper, we will see the **differences** in stimuli 9A, 11A, 3B.  
 ![Table 1]({{ site.url }}/assets/medin1.png)
 
 # Experiment 3
@@ -103,7 +102,7 @@ model(exemplars,trans_stim,exemplars_names,trans_stim_names,pars,5,4)
 
 
 Experiment 3 seems to be fine. If we compare the output with the Table 4, there are not major differences.  
-*Note: Stimuli probability of 9A=1-probability of 9B, 11A=1-probability of 11B, 3B=probability of 3A*
+*Note: Stimuli probability of 9A=1-probability of 9B, 11A=1-probability of 11B, 3B=probability of 3A*  
 ![Table 4]({{ site.url }}/assets/medin2.png)
 
 # Experiment 4
