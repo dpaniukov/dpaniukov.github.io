@@ -1,7 +1,7 @@
 ---
 layout: page
 title:  You and Your R: Doing Statistics in Python
-date: 2016-10-25 15:40:00
+date: 2016-10-25 13:40:00
 ---
 
 
