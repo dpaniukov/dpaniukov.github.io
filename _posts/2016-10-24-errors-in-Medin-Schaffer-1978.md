@@ -1,12 +1,12 @@
 ---
 layout: page
-title:  Error in Medin & Schaffer, 1978
+title:  Errors in Medin & Schaffer, 1978
 date: 2016-10-24 12:05:00
 ---
 
 
 Today we will simulate experiments on [Context Theory of Classification Learning](http://groups.psych.northwestern.edu/medin/documents/MedinSchaffer1978PsychRev.pdf) (Medin & Schaffer, 1978).
-**Important differences of simulated and published results will be shown**  
+**Important differences of simulated and published results will be shown.**  
 Dr. Medin kindly confirmed the typos in the paper and asked to publish them somewhere.
 
 # Set up the model:
