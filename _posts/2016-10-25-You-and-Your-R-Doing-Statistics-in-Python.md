@@ -1,6 +1,6 @@
 ---
 layout: page
-title:  You and Your R: Doing Statistics in Python
+title:  You and Your R - Doing Statistics in Python
 date: 2016-10-25 13:40:00
 ---
 
@@ -62,17 +62,7 @@ m = np.random.multivariate_normal(means, covs, 2500).T
 plt.scatter(m[0], m[1])
 ```
 
-
-
-
-    <matplotlib.collections.PathCollection at 0x7f13eb48c350>
-
-
-
-
 ![plot1]({{ site.url }}/assets/python_stats1.png)
-
-
 
 ```python
 # categorical variable
@@ -105,24 +95,13 @@ df.plot(x='temp', y='ice_cream', kind='scatter', c='cities', ax=None, subplots=F
 
 ```
 
-
-
-
-    <matplotlib.axes._subplots.AxesSubplot at 0x7f13eb6d8f90>
-
-
-
-
 ![plot2]({{ site.url }}/assets/python_stats2.png)
-
 
 
 ```python
 #Preview top few lines
 df.head()
 ```
-
-
 
 
 <div>
@@ -350,13 +329,16 @@ print "correlation coefficient: ", r, "; p-value: ", p
 
 
 Looks like Scipy is the only way to test for significance
-# Replicate in R
 
-	cities	ice_cream	kids	temp
-cities	1.00000000	0.92667534	-0.01655296	-0.04486818
-ice_cream	0.92667534	1.00000000	0.03426892	0.28836048
-kids	-0.01655296	0.03426892	1.00000000	-0.01796342
-temp	-0.04486818	0.28836048	-0.01796342	1.00000000
+```R
+# Replicate in R
+cities	   1.00000000	0.92667534	-0.01655296	-0.04486818
+ice_cream	 0.92667534	1.00000000	0.03426892	0.28836048
+kids	    -0.01655296	0.03426892	1.00000000	-0.01796342
+temp	    -0.04486818	0.28836048	-0.01796342	1.00000000
+```
+
+
 # One-sample t-test
 
 We'll be using the same dataframe from above.
@@ -370,6 +352,7 @@ print "t-value: ", t, "; p-value: ", p
 
     t-value:  121.335222203 ; p-value:  0.0
 
+```R
 # Replicate in R
 
 	One Sample t-test
@@ -382,6 +365,8 @@ alternative hypothesis: true mean is not equal to 0
 sample estimates:
 mean of x
  42.86787
+```
+
 # Independent sample t-test
 
 
@@ -417,6 +402,7 @@ print "t-value: ", t, "; p-value: ", p, "; df: ", df
 
     t-value:  7.82751207811 ; p-value:  6.68488304875e-15 ; df:  3241.93905035
 
+```R
 # Replicate in R
 
 	Welch Two Sample t-test
@@ -429,6 +415,8 @@ alternative hypothesis: true difference in means is not equal to 0
 sample estimates:
 mean of x mean of y
  42.86787  39.89955
+```
+
 # OLS Regression
 
 
@@ -464,6 +452,7 @@ print lm.summary()
     Warnings:
     [1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
 
+```R
 # Replicate in R
 
 Call:
@@ -483,6 +472,8 @@ Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’
 Residual standard error: 16.92 on 2498 degrees of freedom
 Multiple R-squared:  0.08315,	Adjusted R-squared:  0.08278
 F-statistic: 226.6 on 1 and 2498 DF,  p-value: < 2.2e-16
+```
+
 
 ```python
 #Now using kids as a factor in an interaction
@@ -518,6 +509,7 @@ print lm2.summary()
     Warnings:
     [1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
 
+```R
 # Replicate in R
 
 Call:
@@ -539,7 +531,9 @@ Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’
 Residual standard error: 16.89 on 2496 degrees of freedom
 Multiple R-squared:  0.08677,	Adjusted R-squared:  0.08567
 F-statistic: 79.05 on 3 and 2496 DF,  p-value: < 2.2e-16
-**More info** http://statsmodels.sourceforge.net/stable/examples/notebooks/generated/ols.html
+```
+
+**More info** [http://statsmodels.sourceforge.net/stable/examples/notebooks/generated/ols.html](http://statsmodels.sourceforge.net/stable/examples/notebooks/generated/ols.html)
 
 # ANOVA
 
@@ -553,11 +547,15 @@ print table
     temp       64843.702800     1.0  226.551244  4.474960e-49
     Residual  714979.828862  2498.0         NaN           NaN
 
+```R
 # Replicate in R
 
               Df Sum Sq Mean Sq F value Pr(>F)    
 temp           1  64844   64844   226.6 <2e-16 ***
 Residuals   2498 714980     286                   
+```
+
+
 # Generalized Linear Models
 
 
@@ -583,6 +581,7 @@ print mod1.summary()
     ice_cream      0.0039      0.002      1.713      0.087        -0.001     0.008
     ==============================================================================
 
+```R
 # Replicate in R
 
 Call:
@@ -606,7 +605,9 @@ Residual deviance: 3461.7  on 2498  degrees of freedom
 AIC: 3465.7
 
 Number of Fisher Scoring iterations: 3
-**More info:** http://statsmodels.sourceforge.net/stable/glm.html and http://statsmodels.sourceforge.net/devel/contrasts.html
+```
+
+**More info:** [http://statsmodels.sourceforge.net/stable/glm.html](http://statsmodels.sourceforge.net/stable/glm.html) and [http://statsmodels.sourceforge.net/devel/contrasts.html](http://statsmodels.sourceforge.net/devel/contrasts.html)
 
 # Linear Mixed Effects
 
@@ -633,7 +634,7 @@ print model1.summary()
     Intercept RE 271.356   17.322                           
     ========================================================
 
-
+```R
 # Replicate in R
 
 Linear mixed model fit by maximum likelihood  ['lmerMod']
@@ -661,6 +662,8 @@ temp        0.851126   0.009334   91.19
 Correlation of Fixed Effects:
      (Intr)
 temp -0.158
+```
+
 
 ```python
 model2 = sm.MixedLM.from_formula("ice_cream ~ temp", data=df, re_formula="temp", groups=df["cities"]).fit(reml=False)
@@ -685,7 +688,7 @@ print model2.summary()
     temp RE                 0.178    0.026                           
     =================================================================
 
-
+```R
 # Replicate in R
 
 Linear mixed model fit by maximum likelihood  ['lmerMod']
@@ -714,7 +717,10 @@ temp         0.86235    0.05976   14.43
 Correlation of Fixed Effects:
      (Intr)
 temp -0.381
-**More info:** http://statsmodels.sourceforge.net/stable/mixed_linear.html
+```
+
+
+**More info:** [http://statsmodels.sourceforge.net/stable/mixed_linear.html](http://statsmodels.sourceforge.net/stable/mixed_linear.html)
 
 
 Please email me your comments and questions!

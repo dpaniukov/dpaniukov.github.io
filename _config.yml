@@ -16,3 +16,4 @@ github_username:  dpaniukov
 
 # Build settings
 markdown: kramdown
+exclude:	['*.ipynb']
