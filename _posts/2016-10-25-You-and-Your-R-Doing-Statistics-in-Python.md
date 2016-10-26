@@ -8,16 +8,8 @@ date: 2016-10-25 13:40:00
 In this post I will tell you how to do statistics in Python. I've been trained in statistics mostly with R, but I do a lot of fMRI analyses in Python and do not really want to switch back and forth.
 
 # Table of Contents
-* [Intro](#Intro)
-* [Prepare dataset](#Prepare-dataset)
-* [Correlation](#Correlation)
-* [One-sample t-test](#One-sample-t-test)
-* [Independent sample t-test](#Independent-sample-t-test)
-* [OLS Regression](#OLS-Regression)
-* [ANOVA](#ANOVA)
-* [Generalized Linear Models](#Generalized-Linear-Models)
-* [Linear Mixed Effects](#Linear-Mixed-Effects)
-
+* TOC
+{:toc}
 
 # Intro
 
