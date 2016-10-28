@@ -6,7 +6,7 @@ permalink: /cv/
 
 # Dmitrii Paniukov
 
-*Last update: May 5, 2016*
+*Last update: October 28, 2016*
 
 ## Education
 **Ph.D.** in Experimental Psychology, Texas Tech University, Lubbock, TX (2013 - present)  
@@ -30,6 +30,20 @@ Ari, F., Flores, R., Inan, F., Cheon, J., Crooks, S., Paniukov, D., Kurucay, M. 
 Inan, F., Crooks, S., Cheon, J., Ari, F., Kurucay, M., Flores, R., Paniukov, D. (2014). The Reverse Modality Effect: Examining Student Learning from an Interactive Computer-Based Diagram. *British Journal of Educational Technology. 46*(1), 123-130.
 
 Paniukov, D., Cheon, J., & Crooks, S. (2011). Employing multimedia software to address common misconceptions in astronomy education: Recognizing lunar patterns and shapes from different vantage points on the earth. *Proceeding of the Annual Convention of the Association for Educational Communications and Technology, 2011*(2), 429-433.
+
+## Manuscripts in Preparation
+
+Paniukov, D., Davis, T. (manuscript in preparation). Integrative Role of Frontal Polar Cortex in Rule-Based Category Learning.
+
+Paniukov, D., Davis, T. (manuscript in preparation). Boundary Enhancement Effects in FMR Adaptation: Warping of Representational Space or Heightened Attention?
+
+## Current Projects
+
+Multiple Memory Systems in Category Learning: an fMRI study. *Status: Data analysis*
+
+Role of Frontal Polar Cortex in Feature-Based and Relational Category Learning. *Status: Data analysis*
+
+Neural Basis for Music Skill Learning in Novice and Expert Musicians. *Status: Preparation for data collection*
 
 ## Conference Presentations
 
