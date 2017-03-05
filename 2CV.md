@@ -6,34 +6,38 @@ permalink: /cv/
 
 # Dmitrii Paniukov
 
-*Last update: October 28, 2016*
+*Last update: March 5, 2017*
 
 ## Education
-**Ph.D.** in Experimental Psychology, Texas Tech University, Lubbock, TX (2013 - present)  
+**Ph.D.** in Experimental Psychology, Texas Tech University (R1), Lubbock, TX (2013 - present)  
 **Certificate in Psychological Methods and Analyses**, Texas Tech University, Lubbock, TX (2015 - present)  
-**M.A.** in Experimental Psychology, Texas Tech University, Lubbock, TX (2013 - 2015)  
-**M.Ed.** in Educational Design and Instructional Technology, Texas Tech University, Lubbock, TX (2010 - 2014)  
-**Specialist degree** in Law, Voronezh State University, Voronezh, Russia (2001 - 2006)  
+**M.A.** in Experimental Psychology, Texas Tech University, Lubbock, TX (2015)  
+**M.Ed.** in Educational Design and Instructional Technology, Texas Tech University, Lubbock, TX (2014)  
+**Specialist degree** in Law, Voronezh State University, Voronezh, Russia (2006)  
 
 ## Peer Reviewed Publications
 
-Tapp, W.N., Davis, T.H., Paniukov, D., Brooks, J. C., Miller, M.F. (submitted). Neuropsychological changes in resting state connectivity induced by beef stimuli. *Meat Science*.
+Paniukov, D. & Davis, T. (in review). The integrative role of frontopolar cortex in rule-based category learning. *Neuropsychologia*
 
-Tapp, W.N., Davis, T.H., Paniukov, D., Miller, M.F. (in press). Neural connectivity of the right and left nucleus accumbens after eating high and low quality steak. *Meat Science*.
+Kahathuduwa, C., Davis, T., O'Boyle, M., Boyd, L., Chin, S., Paniukov, D., Binks, M. (in review). Effects of 3-Week total meal replacement vs. typical food-based diet on human brain functional magnetic resonance imaging food-cue reactivity in people with obesity. *International Journal of Obesity*
 
-Taraban, R., Paniukov, D., Schumacher, J., Kiser, M. (2015). Metacognitive Judgments of Knowing. *Improve with Metacognition*. [link](http://www.improvewithmetacognition.com/metacognitive-judgments-of-knowing/)  
+Tapp, W.N., Davis, T.H., Paniukov, D., Brooks, J. C., Miller, M.F. (in press). Neuropsychological changes in resting state connectivity induced by beef stimuli. *Meat Science*
 
-Taraban, R., Paniukov, D., Kiser, M. (2014). What metacognitive skills do developmental college readers need? *Improve with Metacognition*.  [link](http://www.improvewithmetacognition.com/what-metacognitive-skills-do-developmental-college-readers-need/)
+Tapp, W.N., Davis, T.H., Paniukov, D., Miller, M.F. (in press). Neural connectivity of the right and left nucleus accumbens after eating high and low quality steak. *Meat Science*
 
 Ari, F., Flores, R., Inan, F., Cheon, J., Crooks, S., Paniukov, D., Kurucay, M. (2014). The effects of verbally redundant information on student learning: An instance of reverse redundancy. *Computers & Education, 76*, 199-204.
 
 Inan, F., Crooks, S., Cheon, J., Ari, F., Kurucay, M., Flores, R., Paniukov, D. (2014). The Reverse Modality Effect: Examining Student Learning from an Interactive Computer-Based Diagram. *British Journal of Educational Technology. 46*(1), 123-130.
 
+## Other Peer Reviewed Publications
+
+Taraban, R., Paniukov, D., Schumacher, J., Kiser, M. (2015). Metacognitive Judgments of Knowing. *Improve with Metacognition*. [link](http://www.improvewithmetacognition.com/metacognitive-judgments-of-knowing/)  
+
+Taraban, R., Paniukov, D., Kiser, M. (2014). What metacognitive skills do developmental college readers need? *Improve with Metacognition*.  [link](http://www.improvewithmetacognition.com/what-metacognitive-skills-do-developmental-college-readers-need/)
+
 Paniukov, D., Cheon, J., & Crooks, S. (2011). Employing multimedia software to address common misconceptions in astronomy education: Recognizing lunar patterns and shapes from different vantage points on the earth. *Proceeding of the Annual Convention of the Association for Educational Communications and Technology, 2011*(2), 429-433.
 
 ## Manuscripts in Preparation
-
-Paniukov, D., Davis, T. (manuscript in preparation). Integrative Role of Frontal Polar Cortex in Rule-Based Category Learning.
 
 Paniukov, D., Davis, T. (manuscript in preparation). Boundary Enhancement Effects in FMR Adaptation: Warping of Representational Space or Heightened Attention?
 
@@ -43,9 +47,11 @@ Multiple Memory Systems in Category Learning: an fMRI study. *Status: Data analy
 
 Role of Frontal Polar Cortex in Feature-Based and Relational Category Learning. *Status: Data analysis*
 
-Neural Basis for Music Skill Learning in Novice and Expert Musicians. *Status: Preparation for data collection*
+Neural Basis of Music Skill Learning in Novice and Expert Musicians. *Status: Preparation for data collection*
 
 ## Conference Presentations
+
+Paniukov, D., Davis, T. (2016, November). Role of the Frontal Polar Cortex in Category Learning: Rule Integration or Switching?  Poster presented at Society for Neuroscience, San Diego, CA. [link](https://www.researchgate.net/publication/309762318_Role_of_the_Frontal_Polar_Cortex_in_Category_Learning_Rule_Integration_or_Switching)
 
 Paniukov, D., Worthy, D., Davis, T. (2016, April). *Boundary Enhancement Effects in FMR Adaptation: Warping of Representational Space or Heightened Attention?* Poster presented at the Cognitive Neuroscience Society, New York, NY. [link](https://www.researchgate.net/publication/299485280_Boundary_Enhancement_Effects_in_FMR_Adaptation_Warping_of_Representational_Space_or_Heightened_Attention)
 
@@ -99,8 +105,9 @@ Paniukov, D., Cheon, J., & Crooks, S. (2011, October 22). *Implementation of Mul
 ## Other Skills
 **Statistical Software:** R, Python statistical packages, SPSS  
 **fMRI Software:** FSL, Pymvpa, Nipype, ANTs, FreeSurfer  
-**Programming Languages:** Python, R, Unix-based shell-scripts, Java-Script, HTML  
-**CrowdSourcing:** Amazon Mechanical Turk, psiTurk, Qualtrics
+**Programming Languages:** Python, R, Unix-based shell-scripts, Java-Script, Mathlab, C#, PHP, HTML  
+**CrowdSourcing:** Amazon Mechanical Turk, psiTurk, Qualtrics  
+**Human languages:** Russian (native), English (fluent)  
 
 ## Current affiliation with professional organizations  
 * Society for Neuroscience
