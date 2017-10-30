@@ -6,7 +6,7 @@ permalink: /cv/
 
 # Dmitrii Paniukov
 
-*Last update: March 5, 2017*
+*Last update: October 30, 2017*
 
 ## Education
 **Ph.D.** in Experimental Psychology, Texas Tech University (R1), Lubbock, TX (2013 - present)  
@@ -17,13 +17,11 @@ permalink: /cv/
 
 ## Peer Reviewed Publications
 
-Paniukov, D. & Davis, T. (in review). The integrative role of frontopolar cortex in rule-based category learning. *Neuropsychologia*
+Paniukov, D. & Davis, T. (in press). The Evaluative Role of Rostrolateral Prefrontal Cortex in Rule-Based Category Learning. *NeuroImage*. [preprint](https://www.biorxiv.org/content/early/2017/05/11/107110)
 
-Kahathuduwa, C., Davis, T., O'Boyle, M., Boyd, L., Chin, S., Paniukov, D., Binks, M. (in review). Effects of 3-Week total meal replacement vs. typical food-based diet on human brain functional magnetic resonance imaging food-cue reactivity in people with obesity. *International Journal of Obesity*
+Kahathuduwa, C., Davis, T., O'Boyle, M., Boyd, L., Chin, S., Paniukov, D., Binks, M. (in press). Effects of 3-Week total meal replacement vs. typical food-based diet on human brain functional magnetic resonance imaging food-cue reactivity in people with obesity. *Appetite*
 
-Tapp, W.N., Davis, T.H., Paniukov, D., Brooks, J. C., Miller, M.F. (in press). Neuropsychological changes in resting state connectivity induced by beef stimuli. *Meat Science*
-
-Tapp, W.N., Davis, T.H., Paniukov, D., Miller, M.F. (in press). Neural connectivity of the right and left nucleus accumbens after eating high and low quality steak. *Meat Science*
+Tapp, W.N., Davis, T.H., Paniukov, D., Miller, M.F. (2016). Neural connectivity of the right and left nucleus accumbens after eating high and low quality steak. *Meat Science, 112*, 113.
 
 Ari, F., Flores, R., Inan, F., Cheon, J., Crooks, S., Paniukov, D., Kurucay, M. (2014). The effects of verbally redundant information on student learning: An instance of reverse redundancy. *Computers & Education, 76*, 199-204.
 
@@ -99,12 +97,13 @@ Paniukov, D., Cheon, J., & Crooks, S. (2011, October 22). *Implementation of Mul
 
 #### Graduate Teaching Assistant
 
+* Computer Modeling: Applied Analysis and Simulation (Fall 2017)
 * Computer literacy (Spring 2013)  
 * Distance learning (Fall 2012)  
 
 ## Other Skills
 **Statistical Software:** R, Python statistical packages, SPSS  
-**fMRI Software:** FSL, Pymvpa, Nipype, ANTs, FreeSurfer  
+**fMRI Software:** FSL, Pymvpa, Nipype, ANTs, FreeSurfer, BROCCOLI  
 **Programming Languages:** Python, R, Unix-based shell-scripts, Java-Script, Mathlab, C#, PHP, HTML  
 **CrowdSourcing:** Amazon Mechanical Turk, psiTurk, Qualtrics  
 **Human languages:** Russian (native), English (fluent)  
