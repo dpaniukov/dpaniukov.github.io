@@ -17,7 +17,7 @@ permalink: /cv/
 
 ## Peer Reviewed Publications
 
-Paniukov, D. & Davis, T. (in press). The Evaluative Role of Rostrolateral Prefrontal Cortex in Rule-Based Category Learning. *NeuroImage*. [preprint](https://www.biorxiv.org/content/early/2017/05/11/107110)
+Paniukov, D. & Davis, T. (in press). The Evaluative Role of Rostrolateral Prefrontal Cortex in Rule-Based Category Learning. *NeuroImage*. [pdf]({{ site.url }}/assets/papers/Paniukov_Davis_rlPFC_final.pdf)
 
 Kahathuduwa, C., Davis, T., O'Boyle, M., Boyd, L., Chin, S., Paniukov, D., Binks, M. (in press). Effects of 3-Week total meal replacement vs. typical food-based diet on human brain functional magnetic resonance imaging food-cue reactivity in people with obesity. *Appetite*
 
