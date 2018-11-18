@@ -5,7 +5,7 @@ date: 2016-10-25 13:40:00
 ---
 
 
-In this post I will tell you how to do statistics in Python. I've been trained in statistics mostly with R, but I do a lot of fMRI analyses in Python and do not really want to switch back and forth.
+In this post, I will tell you how to do statistics in Python. I've been trained in statistics mostly with R, but I do a lot of fMRI analyses in Python and do not really want to switch back and forth.
 
 # Table of Contents
 * TOC
@@ -13,9 +13,9 @@ In this post I will tell you how to do statistics in Python. I've been trained i
 
 # Intro
 
-We will be using several Python's modules such as numpy, scipy and [statsmodels](http://statsmodels.sourceforge.net/). Numpy and scipy are standard modules. Statsmodels are shipped with [anaconda](https://www.continuum.io/downloads), but if you somehow do not have statsmodels, install them via `pip install -U statsmodels` or `easy_install -U statsmodels`. Good news is that statsmodels allow to do statistics with R-like formulas (most of the time)!
+We will be using several Python's modules such as numpy, scipy and [statsmodels](http://statsmodels.sourceforge.net/). Numpy and scipy are standard modules. Statsmodels are shipped with [anaconda](https://www.anaconda.com/download), but if you somehow do not have statsmodels, install them via `pip install -U statsmodels` or `easy_install -U statsmodels`. Good news is that statsmodels allow doing statistics with R-like formulas (most of the time)!
 
-In R we often work with dataframes. In Python the dataframes are handled with [Pandas](http://pandas.pydata.org/), which by the way works fine with missing values. In case you do not have it, [install it](http://pandas.pydata.org/pandas-docs/stable/install.html)! Hint: `pip install pandas` should work ;)
+In R we often work with dataframes. In Python, the dataframes are handled with [Pandas](http://pandas.pydata.org/), which by the way works fine with missing values. In case you do not have it, [install it](http://pandas.pydata.org/pandas-docs/stable/install.html)! Hint: `pip install pandas` should work ;)
 
 Here is a [very nice tutorial on Pandas](http://pandas.pydata.org/pandas-docs/stable/10min.html), which I have no intention to rewrite here. It explains how to handle data in timeseries, dataframes, subsetting data, reading and writing, and many more.
 
@@ -91,7 +91,7 @@ df.plot(x='temp', y='ice_cream', kind='scatter', c='cities', ax=None, subplots=F
 
 
 ```python
-#Preview top few lines
+#Preview the top few lines
 df.head()
 ```
 
@@ -383,7 +383,7 @@ print "t-value: ", t, "; p-value: ", p, "; df: ", df
 
 
 ```python
-# Statsmodels with unequal variance that is a default in R
+# Statsmodels with an unequal variance that is a default in R
 # Using numpy arrays since df gives an error
 
 t, p, df = sm.stats.ttest_ind(np.asarray(df['ice_cream']),np.asarray(df['temp']),

@@ -6,7 +6,7 @@ date: 2016-07-14 17:28:00
 Today we will be setting up levels 1 and 2 in a 3-level model with FSL and Nipype, applying transformation matrices from ANTs that we created in [Part 1](https://dpaniukov.github.io/2016/07/03/three-level-analysis-with-fsl-and-ants-1.html).
 
 ## Onset and contrast files
-Before we start running anything, we have to put some files in places. First, all level 1 onset files should be in `<project directory>/<subject directory>/<model>/<model specific folder>/onsets/<task#_run#>`. Next, we have to have a folder inside your main project directory called `models`. Under this folder we will create a model specific folder with description of EVs and contrasts. Thus, let's create a folder `<project directory>/models/model_1`. Now let's create the following files in there.
+Before we start running anything, we have to put some files in places. First, all level 1 onset files should be in `<project directory>/<subject directory>/<model>/<model specific folder>/onsets/<task#_run#>`. Next, we have to have a folder inside your main project directory called `models`. Under this folder, we will create a model specific folder with a description of EVs and contrasts. Thus, let's create a folder `<project directory>/models/model_1`. Now let's create the following files in there.
 For level 1 we should have a file called `condition_key.txt` with the following content:
 {% highlight text %}
 task001 ev001 Stimuli_correct
@@ -75,7 +75,7 @@ film_ms=5 # this should be Susan mask size, not fwhm
 template_brain = fsl.Info.standard_image('MNI152_T1_2mm_brain.nii.gz')
 {% endhighlight %}
 
-Then, we will also need a working directory, where we can put all temporary files, created by nipype. This directory should be specific for each analysis (alternatively, you can change a name of a workflow for each analysis), and may be deleted as soon as the analysis is finished. Besides, if your analyses use the same working directory and the node names overlap, most probably they will not run properly.
+Then, we will also need a working directory, where we can put all temporary files, created by nipype. This directory should be specific for each analysis (alternatively, you can change the name of a workflow for each analysis), and may be deleted as soon as the analysis is finished. Besides, if your analyses use the same working directory and the node names overlap, most probably they will not run properly.
 {% highlight python %}
 work_dir="<path_to_directory>"
 try:
@@ -86,7 +86,7 @@ except OSError as exc:
     pass
 {% endhighlight %}
 
-I prefer to input from the command line which subjects to run, because it is easier to parallel your jobs.
+I prefer to input from the command line which subjects to run because it is easier to parallel your jobs.
 {% highlight python %}
 subj_list=str(sys.argv[1])
 {% endhighlight %}
@@ -166,9 +166,9 @@ def get_subjectinfo(subject_id, base_dir, task_id, model_id):
 
     return subject_id, model_id, task_id, run_id, conds[task_id - 1], itk_id, evs_l2, conds_l2[task_id - 1],
 {% endhighlight %}
-Let's stop for a moment and take a look on what's going on here. Some subjects had no run 1 (because of a visual spike, it was removed), and some had no last runs (did not finish the experiment), thus `run_id` is different for some subjects. `itk_id` was made to indicate an appropriate run. Nipype counts runs starting at 0, while I counted them starting at 1, thus, the run numbers are adjusted for files made by Nipype earlier. `evs_l2` is a vector of ones (1) for each of two tasks. In most of the cases you will be using only one EV at level 2 to combine runs across subjects; and you will have something like this: `evs_l2=dict(ev001=[1,1,1,1,1,1,1,1])`. Everything under that just parses out the condition files for each run and each level.
+Let's stop for a moment and take a look at what's going on here. Some subjects had no run 1 (because of a visual spike, it was removed), and some had no last runs (did not finish the experiment), thus `run_id` is different for some subjects. `itk_id` was made to indicate an appropriate run. Nipype counts the runs starting at 0, while I counted them starting at 1, thus, the run numbers are adjusted for files made by Nipype earlier. `evs_l2` is a vector of ones (1) for each of two tasks. In most of the cases you will be using only one EV at level 2 to combine runs across subjects; and you will have something like this: `evs_l2=dict(ev001=[1,1,1,1,1,1,1,1])`. Everything under that just parses out the condition files for each run and each level.
 
-Prepare the node to run the function above and grab subject specific data like we did in the [Part 1](https://dpaniukov.github.io/2016/07/03/three-level-analysis-with-fsl-and-ants-1.html):
+Prepare the node to run the function above and grab subject-specific data as we did in the [Part 1](https://dpaniukov.github.io/2016/07/03/three-level-analysis-with-fsl-and-ants-1.html):
 {% highlight python %}
 subjinfo = pe.Node(util.Function(input_names=['subject_id','base_dir', 'task_id', 'model_id'],
                                 output_names=['subject_id','model_id','task_id','run_id','conds','itk_id','evs_l2','conds_l2'],
@@ -270,7 +270,7 @@ wf.connect(prefiltered_func_data, 'out_file', medianval, 'in_file')
 wf.connect(threshold, 'out_file', medianval, 'mask_file')
 {% endhighlight %}
 
-Dilate the mask. This is the final mask for the level 1.
+Dilate the mask. This is the final mask for level 1.
 
 {% highlight python %}
 dilatemask = pe.MapNode(interface=fsl.ImageMaths(suffix='_dil',
@@ -324,7 +324,7 @@ smooth = pe.MapNode(interface=fsl.SUSAN(),
 smooth.inputs.fwhm = fwhm_thr
 {% endhighlight %}
 
-Here I have to note that if you will be replicating the same in FSL, you won't get exact same copes. The reason is that Nipype uses a standard formula to calculate smoothing: `sqrt(8*log(2))`, when FSL uses a different formula. Thus, to completely replicate FSL, you should use `fwhm_thr=5.999541516002418` instead of `fwhm_thr=6.0` we used above.
+Here I have to note that if you will be replicating the same in FSL, you won't get exact same copes. The reason is that Nipype uses a standard formula to calculate smoothing: `sqrt(8*log(2))` when FSL uses a different formula. Thus, to completely replicate FSL, you should use `fwhm_thr=5.999541516002418` instead of `fwhm_thr=6.0` we used above.
 
 Define a function to get the brightness threshold for SUSAN
 
@@ -604,7 +604,7 @@ wf.connect(datasource, 'contrasts_l2', contrastgen_l2, 'contrast_file')
 wf.connect(subjinfo, 'task_id', contrastgen_l2, 'task_id')
 {% endhighlight %}
 
-Here we will use `MultipleRegressDesign` instead of `L2Model` recommended in Nipype examples to generate subject and condition specific level 2 model design files, because `MultipleRegressDesign` can handle more than one EV according to its name... ((c) Captain Obvious)
+Here we will use `MultipleRegressDesign` instead of `L2Model` recommended in Nipype examples to generate subject and condition-specific level 2 model design files because `MultipleRegressDesign` can handle more than one EV according to its name... ((c) Captain Obvious)
 
 {% highlight python %}
 level2model = pe.Node(interface=fsl.MultipleRegressDesign(),
@@ -651,4 +651,4 @@ This is it for the preprocessing, levels 1 and 2. Next time, I will post my code
 
 I would like to thank Dr. Tyler Davis for his guidance and help with FSL and quality checking. Of course, all possible inaccuracies in the code are mine.
 
-Please email me your comments and questions!
+

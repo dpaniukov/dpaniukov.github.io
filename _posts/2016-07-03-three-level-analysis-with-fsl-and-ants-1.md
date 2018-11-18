@@ -3,13 +3,13 @@ layout: page
 title:  Three-level analysis with FSL and ANTs in Nipype. Part 1.
 date: 2016-07-03 13:10:00
 ---
-In a series of posts I plan to talk about how to run three-level analysis with FSL and ANTs. We will use [ANTs](https://github.com/stnava/ANTs) for registration, [FSL](www.fmrib.ox.ac.uk/fsl) for the analysis itself and [nipype](http://nipy.org/nipype/index.html) for putting everything together. I will be heavily utilizing a code from [nipype examples](http://nipy.org/nipype/documentation.html), changing it's when necessary. Again, this is not an original work, it is rather putting everything together and modifying when it's appropriate.
+In a series of posts, I plan to talk about how to run the three-level analysis with FSL and ANTs. We will use [ANTs](https://github.com/stnava/ANTs) for registration, [FSL](https://www.fmrib.ox.ac.uk/fsl) for the analysis itself and [nipype](http://nipy.org/nipype/index.html) for putting everything together. I will be heavily utilizing a code from [nipype examples](https://nipype.readthedocs.io/en/latest/documentation.html), changing it's when necessary. Again, this is not an original work, it is rather putting everything together and modifying when it's appropriate.
 
-To illustrate the analysis, I will use a study (manuscript in preparation) on category learning. It had two tasks in counterbalanced order (task 1 and task 2). Each task was scanned within four runs. In the code, I will put comments that explain what is going on and why I apply exceptions to some of my subjects or to the nipype original code.
+To illustrate the analysis, I will use our study ([Paniukov & Davis, Neuroimage, 2018](https://drive.google.com/open?id=1sTA59USXpDxfXnPAw6PDJNMM5eSbKwh2)) on category learning (the [code is available here](https://github.com/dpaniukov/RulesFPC)). It had two tasks in counterbalanced order (task 1 and task 2). Each task was scanned within four runs. In the code, I will put comments that explain what is going on and why I apply exceptions to some of my subjects or to the nipype original code.
 
 ## Registration with ANTs  
 
-At this post we will be doing registration with ANTs. The overall idea is to run the registration once and then run whatever number of analysis you want, applying this registration.
+At this post, we will be doing registration with ANTs. The overall idea is to run the registration once and then run whatever number of analysis you want, applying this registration.
 
 ### Preparation and preprocessing
 
@@ -38,14 +38,14 @@ Now, let's define some variables specific to our project. First, we will be need
 project_dir="<path_to_directory>"
 {% endhighlight %}
 
-Then, we will also need a working directory, where we can put all temporary files, created by nipype. This directory should be specific for each analysis (alternatively, you can change a name of a workflow for each analysis), and may be deleted as soon as the analysis is finished. Besides, if your analyses use the same working directory and the node names overlap, most probably they will not run properly.
+Then, we will also need a working directory, where we can put all temporary files, created by nipype. This directory should be specific for each analysis (alternatively, you can change the name of a workflow for each analysis), and may be deleted as soon as the analysis is finished. Besides, if your analyses use the same working directory and the node names overlap, most probably they will not run properly.
 {% highlight python %}
 work_dir="<path_to_directory>"
 if not os.path.exists(work_dir):
     os.makedirs(work_dir)
 {% endhighlight %}
 
-I prefer to input from the command line which subjects to run, because it is easier to parallel your jobs.
+I prefer to input from the command line which subjects to run because it is easier to parallel your jobs.
 {% highlight python %}
 subj_list=str(sys.argv[1])
 {% endhighlight %}
@@ -259,7 +259,7 @@ warp_func.inputs.reference_image = template_brain
 
 ### Save the data and run
 
-We need to save all our data, don't we?! Here we will save the warped anatomical image from ANTs registration, its inverse, both regular non-linear and inverse non-linear ANTs transform martices, transformed example_func to standard space, functional to anatomical space matrices, functional to standard matrices, and the example_func itself just in case we will need it in the future (for computing betaseries in mvpa analysis, for example).
+We need to save all our data, don't we?! Here we will save the warped anatomical image from ANTs registration, its inverse, both regular non-linear and inverse non-linear ANTs transform matrices, transformed example_func to standard space, functional to anatomical space matrices, functional to standard matrices, and the example_func itself just in case we will need it in the future (for computing betaseries in mvpa analysis, for example).
 
 {% highlight python %}
 datasink = pe.Node(nio.DataSink(), name='sinker')
@@ -288,4 +288,7 @@ For the quality assessment, revisit all warped anatomical images and functional 
 slices your_BOLD_image.nii.gz MNI152_T1_2mm_brain.nii.gz -o output_image.gif
 {% endhighlight %}
 
-Please email me your comments and questions!
+*Reference: Paniukov, D., & Davis, T. (2018). The evaluative role of rostrolateral prefrontal cortex in rule-based category learning. NeuroImage, 166, 19-31.
+
+
+

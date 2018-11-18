@@ -5,7 +5,7 @@ date: 2016-08-01 11:05:00
 ---
 Today we will be setting up level 3 in a 3-level model with FSL and Nipype, using data from [Part 1](https://dpaniukov.github.io/2016/07/03/three-level-analysis-with-fsl-and-ants-1.html) and copes from [Part 2](https://dpaniukov.github.io/2016/07/14/three-level-analysis-with-fsl-and-ants-2.html)
 
-Level 3 setup is very similar to levels 1 and 2. At the beginning we will be importing some useful libraries and setting up the project variables.
+Level 3 setup is very similar to levels 1 and 2. At the beginning, we will be importing some useful libraries and setting up the project variables.
 
 {% highlight python %}
 
@@ -48,7 +48,7 @@ wf.config = {"execution": {"crashdump_dir":os.path.join(project_dir,'crashdumps'
 
 {% endhighlight %}
 
-Below we will be getting copes, varcopes and masks for subjects. Note there will be just two subjects, but in real project there will be many more. Also, recall that in the previous parts of the tutorial we had two tasks. The level 2 contrasts were: task1>baseline, task2>baseline, and task1>task2. Hence the copes were saved appropriately.
+Below we will be getting copes, varcopes and masks for subjects. Note there will be just two subjects, but in the real project, there will be many more. Also, recall that in the previous parts of the tutorial we had two tasks. The level 2 contrasts were: task1>baseline, task2>baseline, and task1>task2. Hence the copes were saved appropriately.
 
 {% highlight python %}
 subj_copes=[]
@@ -218,7 +218,7 @@ results = wf.run()
 
 {% endhighlight %}
 
-After it's done running, we need to use FSL's `randomise` to get pretty brain pictures. In `randomise` we will be using standard MNI brain mask from FSL, which copied to the project directory/masks/WB.nii.gz, although you can use the mask from the level 3 above (and my goal was to show you how to make it in case you do not want to use the MNI mask). Below there are two `randomise` commands for two copes. This is just an example, because we should be randomizing all the copes we created.
+After it's done running, we need to use FSL's `randomise` to get pretty brain pictures. In `randomise` we will be using standard MNI brain mask from FSL, which copied to the project directory/masks/WB.nii.gz, although you can use the mask from the level 3 above (and my goal was to show you how to make it in case you do not want to use the MNI mask). Below there are two `randomise` commands for two copes. This is just an example because we should be randomizing all the copes we created.
 
 {% highlight bash %}
 #!/bin/bash
@@ -234,4 +234,3 @@ randomise -i ${proj_dir}level3s/model_1/copes_1_2/copes_merged/cope2_merged.nii.
 
 I would like to thank Dr. Tyler Davis for his guidance and help with FSL and quality checking. Of course, all possible inaccuracies in the code are mine.
 
-Please email me your comments and questions!

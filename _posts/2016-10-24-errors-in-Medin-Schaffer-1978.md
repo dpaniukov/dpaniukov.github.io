@@ -104,7 +104,7 @@ model(exemplars,trans_stim,exemplars_names,trans_stim_names,pars,5,4)
     16A			0.904761904762
 
 
-Experiment 3 seems to be fine. If we compare the output with the Table 4, there are not major differences.  
+Experiment 3 seems to be fine. If we compare the output with Table 4, there are no major differences.  
 *Note: Stimuli probability of 9A=1-probability of 9B, 11A=1-probability of 11B, 3B=probability of 3A*  
 ![Table 4]({{ site.url }}/assets/medin2.png)
 
@@ -145,4 +145,3 @@ These results are also different from the published, specifically for stimuli 15
 
 *Reference: Medin, D. L., & Schaffer, M. M. (1978). Context theory of classification learning. Psychological review, 85(3), 207.*
 
-Please email me your comments and questions!
