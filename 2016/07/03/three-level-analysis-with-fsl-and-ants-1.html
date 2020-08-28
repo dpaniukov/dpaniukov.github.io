@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<!-- saved from url=(0083)http://dpaniukov.github.io/2016/07/03/three-level-analysis-with-fsl-and-ants-1.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Three-level analysis with FSL and ANTs in Nipype. Part 1.</title>
+  <meta name="description" content="In a series of posts, I plan to talk about how to run the three-level analysis with FSL and ANTs. We will use ANTs for registration, FSL for the analysis its...">
+
+  <link rel="stylesheet" href="./Three-level analysis with FSL and ANTs in Nipype. Part 1._files/main.css">
+  <link rel="canonical" href="https://dpaniukov.github.io/2016/07/03/three-level-analysis-with-fsl-and-ants-1.html">
+  <link rel="alternate" type="application/rss+xml" title="Dmitrii Paniukov" href="https://dpaniukov.github.io/feed.xml">
+  <script async="" src="./Three-level analysis with FSL and ANTs in Nipype. Part 1._files/analytics.js"></script><script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-78889004-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+</head>
+
+
+  <body data-gr-c-s-loaded="true">
+
+    <header class="site-header">
+
+  <div class="wrapper">
+
+    <a href="http://dpaniukov.github.io/"><img width="58px" height="58px" src="./Three-level analysis with FSL and ANTs in Nipype. Part 1._files/dp64.png" alt="DP"></a>
+
+    <nav class="site-nav">
+      <a href="http://dpaniukov.github.io/2016/07/03/three-level-analysis-with-fsl-and-ants-1.html#" class="menu-icon">
+        <svg viewBox="0 0 18 15">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"></path>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"></path>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"></path>
+        </svg>
+      </a>
+      <div class="trigger">
+        
+          
+          <a class="page-link" href="http://dpaniukov.github.io/">Tutorials</a>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+
+      </div>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <article class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">Three-level analysis with FSL and ANTs in Nipype. Part 1.</h1>
+  </header>
+
+  <div class="post-content">
+    <p>In a series of posts, I plan to talk about how to run the three-level analysis with FSL and ANTs. We will use <a href="https://github.com/stnava/ANTs">ANTs</a> for registration, <a href="https://www.fmrib.ox.ac.uk/fsl">FSL</a> for the analysis itself and <a href="http://nipy.org/nipype/index.html">nipype</a> for putting everything together. I will be heavily utilizing a code from <a href="https://nipype.readthedocs.io/en/latest/documentation.html">nipype examples</a>, changing it’s when necessary. Again, this is not an original work, it is rather putting everything together and modifying when it’s appropriate.</p>
+
+<p>To illustrate the analysis, I will use our study (<a href="https://drive.google.com/open?id=1sTA59USXpDxfXnPAw6PDJNMM5eSbKwh2">Paniukov &amp; Davis, Neuroimage, 2018</a>) on category learning (the <a href="https://github.com/dpaniukov/RulesFPC">code is available here</a>). It had two tasks in counterbalanced order (task 1 and task 2). Each task was scanned within four runs. In the code, I will put comments that explain what is going on and why I apply exceptions to some of my subjects or to the nipype original code.</p>
+
+<h2 id="registration-with-ants">Registration with ANTs</h2>
+
+<p>At this post, we will be doing registration with ANTs. The overall idea is to run the registration once and then run whatever number of analysis you want, applying this registration.</p>
+
+<h3 id="preparation-and-preprocessing">Preparation and preprocessing</h3>
+
+<p>First, let’s import some interfaces and libraries we will be using below.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="c"># -*- coding: utf-8 -*-</span>
+<span class="c">#!/usr/bin/env python</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="p">,</span><span class="n">sys</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.io</span> <span class="k">as</span> <span class="n">nio</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.fsl</span> <span class="k">as</span> <span class="n">fsl</span>
+<span class="kn">import</span> <span class="nn">nipype.pipeline.engine</span> <span class="k">as</span> <span class="n">pe</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="n">util</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.ants</span> <span class="k">as</span> <span class="n">ants</span>
+<span class="kn">from</span> <span class="nn">nipype.interfaces.c3</span> <span class="kn">import</span> <span class="n">C3dAffineTool</span></code></pre></figure>
+
+<p>Assign output type for FSL, so it will create files <code class="highlighter-rouge">.nii.gz</code>:</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">fsl</span><span class="o">.</span><span class="n">FSLCommand</span><span class="o">.</span><span class="n">set_default_output_type</span><span class="p">(</span><span class="s">'NIFTI_GZ'</span><span class="p">)</span></code></pre></figure>
+
+<p>Now, let’s define some variables specific to our project. First, we will be needing the root project directory, where all our data are.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">project_dir</span><span class="o">=</span><span class="s">"&lt;path_to_directory&gt;"</span></code></pre></figure>
+
+<p>Then, we will also need a working directory, where we can put all temporary files, created by nipype. This directory should be specific for each analysis (alternatively, you can change the name of a workflow for each analysis), and may be deleted as soon as the analysis is finished. Besides, if your analyses use the same working directory and the node names overlap, most probably they will not run properly.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">work_dir</span><span class="o">=</span><span class="s">"&lt;path_to_directory&gt;"</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">work_dir</span><span class="p">):</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">work_dir</span><span class="p">)</span></code></pre></figure>
+
+<p>I prefer to input from the command line which subjects to run because it is easier to parallel your jobs.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">subj_list</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></code></pre></figure>
+
+<p>Now, let’s define the workflow.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">wf</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">'wf'</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">base_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">work_dir</span><span class="p">,</span><span class="s">"reg_wdir"</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="p">{</span><span class="s">"execution"</span><span class="p">:</span> <span class="p">{</span><span class="s">"crashdump_dir"</span><span class="p">:</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">work_dir</span><span class="p">,</span><span class="s">'reg_crashdumps'</span><span class="p">)}}</span></code></pre></figure>
+
+<p>… and get a subject’s id:</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">infosource</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s">'subject_id'</span><span class="p">]),</span> <span class="n">name</span><span class="o">=</span><span class="s">"infosource"</span><span class="p">)</span>
+<span class="n">infosource</span><span class="o">.</span><span class="n">iterables</span> <span class="o">=</span> <span class="p">(</span><span class="s">'subject_id'</span><span class="p">,</span> <span class="p">[</span><span class="n">subj_list</span><span class="p">])</span></code></pre></figure>
+
+<p>Again, I am using just one subject per running job, so they are already in parallel. But in case you want to put all of them into this script and run in parallel (may the power of CPU be with you!), this is the place to do it (e.g., put <code class="highlighter-rouge">["Subject001","Subject002"]</code> instead of <code class="highlighter-rouge">[subj_list]</code>, and remove <code class="highlighter-rouge">subj_list</code> variable above.)</p>
+
+<p>Here I use a function to get information for a specific subject. It may be different information such as ids for run numbers, condition information, etc. In the code below, some subjects had no run 1 (because of a visual spike, it was removed), and some had no last runs (did not finish the experiment).</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="k">def</span> <span class="nf">get_subjectinfo</span><span class="p">(</span><span class="n">subject_id</span><span class="p">):</span>
+
+    <span class="n">run_id</span><span class="o">=</span><span class="p">[]</span>
+    <span class="k">if</span> <span class="n">subject_id</span><span class="o">==</span><span class="s">"Subject003"</span> <span class="ow">or</span> <span class="n">subject_id</span><span class="o">==</span><span class="s">"Subject011"</span> <span class="ow">or</span> <span class="n">subject_id</span><span class="o">==</span><span class="s">"Subject016"</span> <span class="ow">or</span> <span class="n">subject_id</span><span class="o">==</span><span class="s">"Subject020"</span><span class="p">:</span>
+        <span class="n">run_id</span><span class="o">=</span><span class="p">[</span><span class="s">"2"</span><span class="p">,</span><span class="s">"3"</span><span class="p">,</span><span class="s">"4"</span><span class="p">,</span><span class="s">"5"</span><span class="p">,</span><span class="s">"6"</span><span class="p">,</span><span class="s">"7"</span><span class="p">,</span><span class="s">"8"</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">subject_id</span><span class="o">==</span><span class="s">"Subject019"</span><span class="p">:</span>
+        <span class="n">run_id</span><span class="o">=</span><span class="p">[</span><span class="s">"1"</span><span class="p">,</span><span class="s">"2"</span><span class="p">,</span><span class="s">"3"</span><span class="p">,</span><span class="s">"4"</span><span class="p">,</span><span class="s">"5"</span><span class="p">,</span><span class="s">"6"</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">run_id</span><span class="o">=</span><span class="p">[</span><span class="s">"1"</span><span class="p">,</span><span class="s">"2"</span><span class="p">,</span><span class="s">"3"</span><span class="p">,</span><span class="s">"4"</span><span class="p">,</span><span class="s">"5"</span><span class="p">,</span><span class="s">"6"</span><span class="p">,</span><span class="s">"7"</span><span class="p">,</span><span class="s">"8"</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">run_id</span>
+
+<span class="n">subjinfo</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s">'subject_id'</span><span class="p">],</span>
+                                <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s">'run_id'</span><span class="p">],</span>
+                                <span class="n">function</span><span class="o">=</span><span class="n">get_subjectinfo</span><span class="p">),</span>
+                       <span class="n">name</span><span class="o">=</span><span class="s">'subjectinfo'</span><span class="p">)</span>
+
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">([(</span><span class="n">infosource</span><span class="p">,</span> <span class="n">subjinfo</span><span class="p">,</span> <span class="p">[(</span><span class="s">'subject_id'</span><span class="p">,</span> <span class="s">'subject_id'</span><span class="p">)]),])</span></code></pre></figure>
+
+<p>Now, it is time to get all the files we need from the hard drive.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">datasource</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">nio</span><span class="o">.</span><span class="n">DataGrabber</span><span class="p">(</span><span class="n">infields</span><span class="o">=</span><span class="p">[</span><span class="s">'subject_id'</span><span class="p">,</span><span class="s">'run_id'</span><span class="p">],</span> <span class="n">outfields</span><span class="o">=</span><span class="p">[</span><span class="s">'func'</span><span class="p">,</span> <span class="s">'anat'</span><span class="p">]),</span> <span class="n">name</span><span class="o">=</span><span class="s">'datasource'</span><span class="p">)</span>
+<span class="n">datasource</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">base_directory</span> <span class="o">=</span> <span class="n">project_dir</span>
+<span class="n">datasource</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">template</span> <span class="o">=</span> <span class="s">'*'</span>
+<span class="n">datasource</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">field_template</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="s">'</span><span class="si">%</span><span class="s">s/bold/run</span><span class="si">%</span><span class="s">s/run*_mcf_brain.nii.gz'</span><span class="p">,</span>
+                                        <span class="n">anat</span><span class="o">=</span><span class="s">'</span><span class="si">%</span><span class="s">s/anatomy/highres001_BrainExtractionBrain.nii.gz'</span><span class="p">)</span>
+<span class="n">datasource</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">template_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="p">[[</span><span class="s">'subject_id'</span><span class="p">,</span><span class="s">'run_id'</span><span class="p">]],</span>
+                                       <span class="n">anat</span><span class="o">=</span><span class="p">[[</span><span class="s">'subject_id'</span><span class="p">]])</span>
+<span class="n">datasource</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">sort_filelist</span><span class="o">=</span><span class="bp">True</span>
+
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">subjinfo</span><span class="p">,</span> <span class="s">'subject_id'</span><span class="p">,</span> <span class="n">datasource</span><span class="p">,</span> <span class="s">'subject_id'</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">subjinfo</span><span class="p">,</span> <span class="s">'run_id'</span><span class="p">,</span> <span class="n">datasource</span><span class="p">,</span> <span class="s">'run_id'</span><span class="p">)</span></code></pre></figure>
+
+<p>Ok, we have grabbed the files and now we can get the middle volume from each run for the functional to anatomical registration.</p>
+
+<p>Define interfaces first:</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">inputnode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s">'func'</span><span class="p">,</span>
+                                                             <span class="s">'anat'</span><span class="p">,]),</span>
+                    <span class="n">name</span><span class="o">=</span><span class="s">'inputspec'</span><span class="p">)</span>
+
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">([(</span><span class="n">datasource</span><span class="p">,</span> <span class="n">inputnode</span><span class="p">,</span> <span class="p">[(</span><span class="s">'anat'</span><span class="p">,</span><span class="s">'anat'</span><span class="p">),(</span><span class="s">'func'</span><span class="p">,</span> <span class="s">'func'</span><span class="p">),]),])</span></code></pre></figure>
+
+<p>Convert functional images to float representation. Since there can be more than one functional run we use a MapNode to convert each run.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">prefiltered_func_data</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ImageMaths</span><span class="p">(</span><span class="n">out_data_type</span><span class="o">=</span><span class="s">'float'</span><span class="p">,</span>
+                                             <span class="n">op_string</span> <span class="o">=</span> <span class="s">''</span><span class="p">,</span>
+                                             <span class="n">suffix</span><span class="o">=</span><span class="s">'_dtype'</span><span class="p">),</span>
+                       <span class="n">iterfield</span><span class="o">=</span><span class="p">[</span><span class="s">'in_file'</span><span class="p">],</span>
+                       <span class="n">name</span><span class="o">=</span><span class="s">'prefiltered_func_data'</span><span class="p">)</span>
+
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s">'func'</span><span class="p">,</span> <span class="n">prefiltered_func_data</span><span class="p">,</span> <span class="s">'in_file'</span><span class="p">)</span></code></pre></figure>
+
+<p>Extract the middle volume of the run as the reference and define a function to return the 1 based index of the middle volume.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">example_func</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ExtractROI</span><span class="p">(</span><span class="n">t_size</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+                          <span class="n">iterfield</span><span class="o">=</span><span class="p">[</span><span class="s">'in_file'</span><span class="p">],</span>
+                          <span class="n">name</span> <span class="o">=</span> <span class="s">'example_func'</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">getmiddlevolume</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">nibabel</span> <span class="kn">import</span> <span class="n">load</span>
+    <span class="n">funcfile</span> <span class="o">=</span> <span class="n">func</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">funcfile</span> <span class="o">=</span> <span class="n">func</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">_</span><span class="p">,</span><span class="n">_</span><span class="p">,</span><span class="n">_</span><span class="p">,</span><span class="n">timepoints</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="n">funcfile</span><span class="p">)</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">timepoints</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">prefiltered_func_data</span><span class="p">,</span> <span class="s">'out_file'</span><span class="p">,</span> <span class="n">example_func</span><span class="p">,</span> <span class="s">'in_file'</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="p">(</span><span class="s">'func'</span><span class="p">,</span> <span class="n">getmiddlevolume</span><span class="p">),</span> <span class="n">example_func</span><span class="p">,</span> <span class="s">'t_min'</span><span class="p">)</span></code></pre></figure>
+
+<h3 id="register-functionals-to-anatomical-space">Register functionals to anatomical space</h3>
+
+<p>Estimate the tissue classes from the anatomical image.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">fast</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">fsl</span><span class="o">.</span><span class="n">FAST</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s">'fast'</span><span class="p">)</span>
+
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s">'anat'</span><span class="p">,</span> <span class="n">fast</span><span class="p">,</span> <span class="s">'in_files'</span><span class="p">)</span></code></pre></figure>
+
+<p>Binarize the segmentation.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">binarize</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">fsl</span><span class="o">.</span><span class="n">ImageMaths</span><span class="p">(</span><span class="n">op_string</span><span class="o">=</span><span class="s">'-nan -thr 0.5 -bin'</span><span class="p">),</span>
+                   <span class="n">name</span><span class="o">=</span><span class="s">'binarize'</span><span class="p">)</span>
+<span class="n">pickindex</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">fast</span><span class="p">,</span> <span class="p">(</span><span class="s">'partial_volume_files'</span><span class="p">,</span> <span class="n">pickindex</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">binarize</span><span class="p">,</span> <span class="s">'in_file'</span><span class="p">)</span></code></pre></figure>
+
+<p>Calculate rigid transform from example_func image to anatomical image.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">func2anat</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="p">(</span><span class="n">fsl</span><span class="o">.</span><span class="n">FLIRT</span><span class="p">(),</span> <span class="n">iterfield</span><span class="o">=</span><span class="p">[</span><span class="s">'in_file'</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s">'func2anat'</span><span class="p">)</span>
+<span class="n">func2anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">dof</span> <span class="o">=</span> <span class="mi">6</span>
+
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">example_func</span><span class="p">,</span> <span class="s">'roi_file'</span><span class="p">,</span> <span class="n">func2anat</span><span class="p">,</span> <span class="s">'in_file'</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s">'anat'</span><span class="p">,</span> <span class="n">func2anat</span><span class="p">,</span> <span class="s">'reference'</span><span class="p">)</span></code></pre></figure>
+
+<p>Now use BBR cost function to improve the transform.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">func2anatbbr</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="p">(</span><span class="n">fsl</span><span class="o">.</span><span class="n">FLIRT</span><span class="p">(),</span> <span class="n">iterfield</span><span class="o">=</span><span class="p">[</span><span class="s">'in_file'</span><span class="p">,</span><span class="s">'in_matrix_file'</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s">'func2anatbbr'</span><span class="p">)</span>
+<span class="n">func2anatbbr</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">dof</span> <span class="o">=</span> <span class="mi">6</span>
+<span class="n">func2anatbbr</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="s">'bbr'</span>
+<span class="n">func2anatbbr</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">schedule</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s">'FSLDIR'</span><span class="p">),</span><span class="s">'etc/flirtsch/bbr.sch'</span><span class="p">)</span>
+
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">example_func</span><span class="p">,</span> <span class="s">'roi_file'</span><span class="p">,</span> <span class="n">func2anatbbr</span><span class="p">,</span> <span class="s">'in_file'</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">binarize</span><span class="p">,</span> <span class="s">'out_file'</span><span class="p">,</span> <span class="n">func2anatbbr</span><span class="p">,</span> <span class="s">'wm_seg'</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s">'anat'</span><span class="p">,</span> <span class="n">func2anatbbr</span><span class="p">,</span> <span class="s">'reference'</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func2anat</span><span class="p">,</span> <span class="s">'out_matrix_file'</span><span class="p">,</span> <span class="n">func2anatbbr</span><span class="p">,</span> <span class="s">'in_matrix_file'</span><span class="p">)</span></code></pre></figure>
+
+<p>Convert the BBRegister transformation to ANTS ITK format for further reuse.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">convert2itk</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="p">(</span><span class="n">C3dAffineTool</span><span class="p">(),</span> <span class="n">iterfield</span><span class="o">=</span><span class="p">[</span><span class="s">'source_file'</span><span class="p">,</span><span class="s">'transform_file'</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s">'convert2itk'</span><span class="p">)</span>
+<span class="n">convert2itk</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">fsl2ras</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="n">convert2itk</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">itk_transform</span> <span class="o">=</span> <span class="bp">True</span>
+
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func2anatbbr</span><span class="p">,</span> <span class="s">'out_matrix_file'</span><span class="p">,</span> <span class="n">convert2itk</span><span class="p">,</span> <span class="s">'transform_file'</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">example_func</span><span class="p">,</span> <span class="s">'roi_file'</span><span class="p">,</span><span class="n">convert2itk</span><span class="p">,</span> <span class="s">'source_file'</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s">'anat'</span><span class="p">,</span> <span class="n">convert2itk</span><span class="p">,</span> <span class="s">'reference_file'</span><span class="p">)</span></code></pre></figure>
+
+<p>We are done with the registration of functional files for now. We will use the affine matrix later to transform the example_func to standard space.</p>
+
+<h3 id="register-anatomical-to-standard-space">Register anatomical to standard space</h3>
+
+<p>You can find a nice crash course on the ANTs registration <a href="https://www.neuroinf.jp/fmanager/view/737/bah20150723-alex.pdf">here</a>. Oh, keep in mind that this example uses 12 CPU threads for a single subject registration. In case you want to run 25 subjects in this script in parallel, you should adjust <code class="highlighter-rouge">reg.inputs.num_threads</code> to the number your computer can handle.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">template_brain</span> <span class="o">=</span> <span class="n">fsl</span><span class="o">.</span><span class="n">Info</span><span class="o">.</span><span class="n">standard_image</span><span class="p">(</span><span class="s">'MNI152_T1_2mm_brain.nii.gz'</span><span class="p">)</span>
+
+<span class="n">reg</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">ants</span><span class="o">.</span><span class="n">Registration</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s">'antsRegister'</span><span class="p">)</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">output_transform_prefix</span> <span class="o">=</span> <span class="s">"output_"</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">transforms</span> <span class="o">=</span> <span class="p">[</span><span class="s">'Rigid'</span><span class="p">,</span> <span class="s">'Affine'</span><span class="p">,</span> <span class="s">'SyN'</span><span class="p">]</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">transform_parameters</span> <span class="o">=</span> <span class="p">[(</span><span class="mf">0.1</span><span class="p">,),</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,),</span> <span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)]</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">number_of_iterations</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">100000</span><span class="p">,</span> <span class="mi">111100</span><span class="p">,</span> <span class="mi">111100</span><span class="p">]]</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">[[</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">200</span><span class="p">]]</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">write_composite_transform</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">collapse_output_transforms</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">initial_moving_transform_com</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">metric</span> <span class="o">=</span> <span class="p">[</span><span class="s">'Mattes'</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">[[</span><span class="s">'Mattes'</span><span class="p">,</span> <span class="s">'CC'</span><span class="p">]]</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">metric_weight</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">[[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]]</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">radius_or_number_of_bins</span> <span class="o">=</span> <span class="p">[</span><span class="mi">32</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">[[</span><span class="mi">32</span><span class="p">,</span> <span class="mi">4</span><span class="p">]]</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">sampling_strategy</span> <span class="o">=</span> <span class="p">[</span><span class="s">'Regular'</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">[[</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">]]</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">sampling_percentage</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.3</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">[[</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">]]</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">convergence_threshold</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.e-8</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.01</span><span class="p">]</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">convergence_window_size</span> <span class="o">=</span> <span class="p">[</span><span class="mi">20</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">smoothing_sigmas</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">sigma_units</span> <span class="o">=</span> <span class="p">[</span><span class="s">'vox'</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">shrink_factors</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span><span class="o">*</span><span class="mi">2</span> <span class="o">+</span> <span class="p">[[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">use_estimate_learning_rate_once</span> <span class="o">=</span> <span class="p">[</span><span class="bp">True</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">use_histogram_matching</span> <span class="o">=</span> <span class="p">[</span><span class="bp">False</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">[</span><span class="bp">True</span><span class="p">]</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">winsorize_lower_quantile</span> <span class="o">=</span> <span class="mf">0.005</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">winsorize_upper_quantile</span> <span class="o">=</span> <span class="mf">0.995</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="s">'--float'</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">output_warped_image</span> <span class="o">=</span> <span class="s">'output_warped_image.nii.gz'</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">output_inverse_warped_image</span> <span class="o">=</span> <span class="s">'output_inverse_warped_image.nii.gz'</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">num_threads</span> <span class="o">=</span> <span class="mi">12</span>
+
+<span class="n">reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">fixed_image</span><span class="o">=</span><span class="n">template_brain</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s">'anat'</span><span class="p">,</span> <span class="n">reg</span><span class="p">,</span> <span class="s">'moving_image'</span><span class="p">)</span></code></pre></figure>
+
+<h3 id="warp-functionals-to-standard-space">Warp functionals to standard space</h3>
+
+<p>Strictly speaking, we will be warping only middle volume for each run (example_func) to standard space for quality assessment.<br>
+Concatenate the affine and ants transforms into a list.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">merge</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Merge</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">iterfield</span><span class="o">=</span><span class="p">[</span><span class="s">'in2'</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s">'mergexfm'</span><span class="p">)</span>
+
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">convert2itk</span><span class="p">,</span> <span class="s">'itk_transform'</span><span class="p">,</span> <span class="n">merge</span><span class="p">,</span> <span class="s">'in2'</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">reg</span><span class="p">,</span> <span class="s">'composite_transform'</span><span class="p">,</span> <span class="n">merge</span><span class="p">,</span> <span class="s">'in1'</span><span class="p">)</span></code></pre></figure>
+
+<p>Transform the example_func image, first to anatomical and then to target.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">warp_func</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="p">(</span><span class="n">ants</span><span class="o">.</span><span class="n">ApplyTransforms</span><span class="p">(),</span> <span class="n">iterfield</span><span class="o">=</span><span class="p">[</span><span class="s">'input_image'</span><span class="p">,</span><span class="s">'transforms'</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s">'warp_func'</span><span class="p">)</span>
+<span class="n">warp_func</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">input_image_type</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">warp_func</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">interpolation</span> <span class="o">=</span> <span class="s">'Linear'</span>
+<span class="n">warp_func</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">invert_transform_flags</span> <span class="o">=</span> <span class="p">[</span><span class="bp">False</span><span class="p">,</span> <span class="bp">False</span><span class="p">]</span>
+<span class="n">warp_func</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">terminal_output</span> <span class="o">=</span> <span class="s">'file'</span>
+
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">example_func</span><span class="p">,</span> <span class="s">'roi_file'</span><span class="p">,</span> <span class="n">warp_func</span><span class="p">,</span> <span class="s">'input_image'</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">merge</span><span class="p">,</span> <span class="s">'out'</span><span class="p">,</span> <span class="n">warp_func</span><span class="p">,</span> <span class="s">'transforms'</span><span class="p">)</span>
+<span class="n">warp_func</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">reference_image</span> <span class="o">=</span> <span class="n">template_brain</span></code></pre></figure>
+
+<h3 id="save-the-data-and-run">Save the data and run</h3>
+
+<p>We need to save all our data, don’t we?! Here we will save the warped anatomical image from ANTs registration, its inverse, both regular non-linear and inverse non-linear ANTs transform matrices, transformed example_func to standard space, functional to anatomical space matrices, functional to standard matrices, and the example_func itself just in case we will need it in the future (for computing betaseries in mvpa analysis, for example).</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">datasink</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">nio</span><span class="o">.</span><span class="n">DataSink</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s">'sinker'</span><span class="p">)</span>
+<span class="n">datasink</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">base_directory</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="s">"reg"</span><span class="p">)</span>
+
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">subjinfo</span><span class="p">,</span> <span class="s">'subject_id'</span><span class="p">,</span> <span class="n">datasink</span><span class="p">,</span> <span class="s">'container'</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">reg</span><span class="p">,</span> <span class="s">'warped_image'</span><span class="p">,</span> <span class="n">datasink</span><span class="p">,</span> <span class="s">'anatomy.anat2standard'</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">reg</span><span class="p">,</span> <span class="s">'inverse_warped_image'</span><span class="p">,</span> <span class="n">datasink</span><span class="p">,</span> <span class="s">'anatomy.standard2anat'</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">reg</span><span class="p">,</span> <span class="s">'composite_transform'</span><span class="p">,</span> <span class="n">datasink</span><span class="p">,</span> <span class="s">'anatomy.anat2standard_mat'</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">reg</span><span class="p">,</span> <span class="s">'inverse_composite_transform'</span><span class="p">,</span> <span class="n">datasink</span><span class="p">,</span> <span class="s">'anatomy.standard2anat_mat'</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">warp_func</span><span class="p">,</span> <span class="s">'output_image'</span><span class="p">,</span> <span class="n">datasink</span><span class="p">,</span> <span class="s">'bold.func2standard'</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func2anatbbr</span><span class="p">,</span> <span class="s">'out_matrix_file'</span><span class="p">,</span> <span class="n">datasink</span><span class="p">,</span> <span class="s">'bold.func2anat_transform'</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">merge</span><span class="p">,</span> <span class="s">'out'</span><span class="p">,</span> <span class="n">datasink</span><span class="p">,</span> <span class="s">'bold.func2standard_mat'</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">example_func</span><span class="p">,</span> <span class="s">'roi_file'</span><span class="p">,</span> <span class="n">datasink</span><span class="p">,</span> <span class="s">'bold.example_func'</span><span class="p">)</span></code></pre></figure>
+
+<p>Shall we run it? For single CPU computer remove <code class="highlighter-rouge">plugin='MultiProc'</code>, put <code class="highlighter-rouge">reg.inputs.num_threads = 1</code> and do not try to run subjects in parallel!</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">results</span> <span class="o">=</span> <span class="n">wf</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">plugin</span><span class="o">=</span><span class="s">'MultiProc'</span><span class="p">)</span></code></pre></figure>
+
+<h3 id="quality-assessment">Quality assessment</h3>
+
+<p>For the quality assessment, revisit all warped anatomical images and functional images transformed to standard space. For the functional images you can also use FSL’s <code class="highlighter-rouge">slices</code> in a terminal (in bash, not in python!) as:</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">slices your_BOLD_image.nii.gz MNI152_T1_2mm_brain.nii.gz <span class="nt">-o</span> output_image.gif</code></pre></figure>
+
+<p>*Reference: Paniukov, D., &amp; Davis, T. (2018). The evaluative role of rostrolateral prefrontal cortex in rule-based category learning. NeuroImage, 166, 19-31.</p>
+
+
+  </div>
+
+</article>
+
+      </div>
+    </div>
+
+    <!--
+<footer class="site-footer">
+
+  <div class="wrapper">
+-->
+    <!--<h2 class="footer-heading">Dmitrii Paniukov</h2>-->
+<!--
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>Dmitrii Paniukov</li>
+          <li><a href="mailto:dmitrii.paniukov@ttu.edu">dmitrii.paniukov@ttu.edu</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/dpaniukov"><span class="icon icon--github"><svg viewBox="0 0 16 16"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">dpaniukov</span></a>
+
+          </li>
+          
+
+          
+          <li>
+            <a href="https://twitter.com/DmitriiPaniukov"><span class="icon icon--twitter"><svg viewBox="0 0 16 16"><path fill="#828282" d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27 c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767 c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206 C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271 c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469 c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg>
+</span><span class="username">DmitriiPaniukov</span></a>
+
+          </li>
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+-->
+
+
+  
+
+
+</body></html>

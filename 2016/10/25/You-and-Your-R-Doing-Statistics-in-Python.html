@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<!-- saved from url=(0084)http://dpaniukov.github.io/2016/10/25/You-and-Your-R-Doing-Statistics-in-Python.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>You and Your R - Doing Statistics in Python</title>
+  <meta name="description" content="In this post, I will tell you how to do statistics in Python. I’ve been trained in statistics mostly with R, but I do a lot of fMRI analyses in Python and do...">
+
+  <link rel="stylesheet" href="./You and Your R - Doing Statistics in Python_files/main.css">
+  <link rel="canonical" href="https://dpaniukov.github.io/2016/10/25/You-and-Your-R-Doing-Statistics-in-Python.html">
+  <link rel="alternate" type="application/rss+xml" title="Dmitrii Paniukov" href="https://dpaniukov.github.io/feed.xml">
+  <script async="" src="./You and Your R - Doing Statistics in Python_files/analytics.js"></script><script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-78889004-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+</head>
+
+
+  <body data-gr-c-s-loaded="true">
+
+    <header class="site-header">
+
+  <div class="wrapper">
+
+    <a href="http://dpaniukov.github.io/"><img width="58px" height="58px" src="./You and Your R - Doing Statistics in Python_files/dp64.png" alt="DP"></a>
+
+    <nav class="site-nav">
+      <a href="http://dpaniukov.github.io/2016/10/25/You-and-Your-R-Doing-Statistics-in-Python.html#" class="menu-icon">
+        <svg viewBox="0 0 18 15">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"></path>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"></path>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"></path>
+        </svg>
+      </a>
+      <div class="trigger">
+        
+          
+          <a class="page-link" href="http://dpaniukov.github.io/">Tutorials</a>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+
+      </div>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <article class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">You and Your R - Doing Statistics in Python</h1>
+  </header>
+
+  <div class="post-content">
+    <p>In this post, I will tell you how to do statistics in Python. I’ve been trained in statistics mostly with R, but I do a lot of fMRI analyses in Python and do not really want to switch back and forth.</p>
+
+<h1 id="table-of-contents">Table of Contents</h1>
+<ul id="markdown-toc">
+  <li><a href="http://dpaniukov.github.io/2016/10/25/You-and-Your-R-Doing-Statistics-in-Python.html#table-of-contents" id="markdown-toc-table-of-contents">Table of Contents</a></li>
+  <li><a href="http://dpaniukov.github.io/2016/10/25/You-and-Your-R-Doing-Statistics-in-Python.html#intro" id="markdown-toc-intro">Intro</a></li>
+  <li><a href="http://dpaniukov.github.io/2016/10/25/You-and-Your-R-Doing-Statistics-in-Python.html#prepare-dataset" id="markdown-toc-prepare-dataset">Prepare dataset</a></li>
+  <li><a href="http://dpaniukov.github.io/2016/10/25/You-and-Your-R-Doing-Statistics-in-Python.html#correlation" id="markdown-toc-correlation">Correlation</a></li>
+  <li><a href="http://dpaniukov.github.io/2016/10/25/You-and-Your-R-Doing-Statistics-in-Python.html#one-sample-t-test" id="markdown-toc-one-sample-t-test">One-sample t-test</a></li>
+  <li><a href="http://dpaniukov.github.io/2016/10/25/You-and-Your-R-Doing-Statistics-in-Python.html#independent-sample-t-test" id="markdown-toc-independent-sample-t-test">Independent sample t-test</a></li>
+  <li><a href="http://dpaniukov.github.io/2016/10/25/You-and-Your-R-Doing-Statistics-in-Python.html#ols-regression" id="markdown-toc-ols-regression">OLS Regression</a></li>
+  <li><a href="http://dpaniukov.github.io/2016/10/25/You-and-Your-R-Doing-Statistics-in-Python.html#anova" id="markdown-toc-anova">ANOVA</a></li>
+  <li><a href="http://dpaniukov.github.io/2016/10/25/You-and-Your-R-Doing-Statistics-in-Python.html#generalized-linear-models" id="markdown-toc-generalized-linear-models">Generalized Linear Models</a></li>
+  <li><a href="http://dpaniukov.github.io/2016/10/25/You-and-Your-R-Doing-Statistics-in-Python.html#linear-mixed-effects" id="markdown-toc-linear-mixed-effects">Linear Mixed Effects</a></li>
+</ul>
+
+<h1 id="intro">Intro</h1>
+
+<p>We will be using several Python’s modules such as numpy, scipy and <a href="http://statsmodels.sourceforge.net/">statsmodels</a>. Numpy and scipy are standard modules. Statsmodels are shipped with <a href="https://www.anaconda.com/download">anaconda</a>, but if you somehow do not have statsmodels, install them via <code class="highlighter-rouge">pip install -U statsmodels</code> or <code class="highlighter-rouge">easy_install -U statsmodels</code>. Good news is that statsmodels allow doing statistics with R-like formulas (most of the time)!</p>
+
+<p>In R we often work with dataframes. In Python, the dataframes are handled with <a href="http://pandas.pydata.org/">Pandas</a>, which by the way works fine with missing values. In case you do not have it, <a href="http://pandas.pydata.org/pandas-docs/stable/install.html">install it</a>! Hint: <code class="highlighter-rouge">pip install pandas</code> should work ;)</p>
+
+<p>Here is a <a href="http://pandas.pydata.org/pandas-docs/stable/10min.html">very nice tutorial on Pandas</a>, which I have no intention to rewrite here. It explains how to handle data in timeseries, dataframes, subsetting data, reading and writing, and many more.</p>
+
+<h1 id="prepare-dataset">Prepare dataset</h1>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#set common stuff</span>
+<span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">import</span> <span class="nn">scipy</span> <span class="k">as</span> <span class="n">sp</span>
+<span class="kn">import</span> <span class="nn">statsmodels.api</span> <span class="k">as</span> <span class="n">sm</span>
+<span class="kn">import</span> <span class="nn">statsmodels.formula.api</span> <span class="k">as</span> <span class="n">smf</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s">"ignore"</span><span class="p">)</span>
+<span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="s">'nan'</span><span class="p">)</span> <span class="c">#to print the whole array</span>
+</code></pre></div></div>
+
+<p>Here I will make up a dataset. I will use two continuous variables, as well as one variable that good for nesting and one binary variable. To make sense out of it, here are the names for these variables. One continuous variable will be liking ice cream (just because I love it!) on a scale from 0 to 100 (hate to love respectively). It may be our dependent variable. The other continuous variable: the temperature of the weather, nesting variable is for the cities where the data were collected, and the last binary variable is for having kids. Please keep in mind, I’m not going to decipher what each model told us about the variables or whether it makes sense to run them together in a model. My goal is to show that we can run a variety of models in python, and the results will be identical to an output from R.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#generate correlated data</span>
+<span class="n">xx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">30.0</span><span class="p">,</span> <span class="mf">110.0</span><span class="p">])</span>
+<span class="n">yy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1000.0</span><span class="p">])</span>
+<span class="n">means</span> <span class="o">=</span> <span class="p">[</span><span class="n">xx</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">yy</span><span class="o">.</span><span class="n">mean</span><span class="p">()]</span>  
+<span class="n">stds</span> <span class="o">=</span> <span class="p">[</span><span class="n">xx</span><span class="o">.</span><span class="n">std</span><span class="p">()</span> <span class="o">/</span> <span class="mi">10</span><span class="p">,</span> <span class="n">yy</span><span class="o">.</span><span class="n">std</span><span class="p">()</span> <span class="o">/</span> <span class="mi">10</span><span class="p">]</span>
+<span class="n">corr</span> <span class="o">=</span> <span class="mf">0.7</span>         <span class="c"># correlation</span>
+<span class="n">covs</span> <span class="o">=</span> <span class="p">[[</span><span class="n">stds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span>          <span class="p">,</span> <span class="n">stds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">stds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">corr</span><span class="p">],</span>
+        <span class="p">[</span><span class="n">stds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">stds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">corr</span><span class="p">,</span>           <span class="n">stds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">]]</span>
+
+<span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">multivariate_normal</span><span class="p">(</span><span class="n">means</span><span class="p">,</span> <span class="n">covs</span><span class="p">,</span> <span class="mi">2500</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">m</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</code></pre></div></div>
+
+<p><img src="./You and Your R - Doing Statistics in Python_files/python_stats1.png" alt="plot1"></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># categorical variable</span>
+<span class="n">cities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">2500</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="s">'i'</span><span class="p">)</span>
+
+<span class="c"># binary variable</span>
+<span class="n">kids</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2500</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="s">'i'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Convert to Pandas. Here to make sense of all the models below, I made up some variable names.</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s">'ice_cream'</span><span class="p">:</span><span class="n">m</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s">'temp'</span><span class="p">:</span> <span class="n">m</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s">'cities'</span><span class="p">:</span> <span class="n">cities</span><span class="p">,</span> <span class="s">'kids'</span><span class="p">:</span> <span class="n">kids</span><span class="p">})</span>
+
+<span class="c"># Assuming different cities have different preferences</span>
+<span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">50</span><span class="p">):</span>
+    <span class="n">df</span><span class="p">[</span><span class="s">'ice_cream'</span><span class="p">][</span><span class="n">df</span><span class="p">[</span><span class="s">'cities'</span><span class="p">]</span><span class="o">==</span><span class="n">num</span><span class="p">]</span> <span class="o">+=</span> <span class="n">df</span><span class="p">[</span><span class="s">'temp'</span><span class="p">]</span><span class="o">*</span><span class="n">num</span>
+
+<span class="c"># Assuming liking ice cream is increased with kids (1; no kids = 0)</span>
+<span class="n">df</span><span class="p">[</span><span class="s">'ice_cream'</span><span class="p">][</span><span class="n">df</span><span class="p">[</span><span class="s">'kids'</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">df</span><span class="p">[</span><span class="s">'temp'</span><span class="p">]</span><span class="o">*</span><span class="mf">1.5</span>
+
+<span class="c"># scale</span>
+<span class="n">df</span><span class="p">[</span><span class="s">'ice_cream'</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s">'ice_cream'</span><span class="p">]</span><span class="o">/</span><span class="mi">35</span>
+
+<span class="c"># Here is how to plot the df</span>
+<span class="n">df</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s">'temp'</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s">'ice_cream'</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s">'scatter'</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s">'cities'</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">subplots</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">layout</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">use_index</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s">'DF'</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">legend</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">logx</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">logy</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">loglog</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">xticks</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">yticks</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">xlim</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ylim</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">rot</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">fontsize</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">colormap</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">yerr</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">xerr</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">secondary_y</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">sort_columns</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+</code></pre></div></div>
+
+<p><img src="./You and Your R - Doing Statistics in Python_files/python_stats2.png" alt="plot2"></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#Preview the top few lines</span>
+<span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>cities</th>
+      <th>ice_cream</th>
+      <th>kids</th>
+      <th>temp</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>19</td>
+      <td>47.529669</td>
+      <td>1</td>
+      <td>57.004601</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>42</td>
+      <td>67.420913</td>
+      <td>0</td>
+      <td>42.419001</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>42</td>
+      <td>61.912708</td>
+      <td>0</td>
+      <td>39.236830</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>32</td>
+      <td>50.251380</td>
+      <td>1</td>
+      <td>38.797294</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>16</td>
+      <td>34.368304</td>
+      <td>1</td>
+      <td>41.432471</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Summary</span>
+<span class="n">df</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>cities</th>
+      <th>ice_cream</th>
+      <th>kids</th>
+      <th>temp</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>2500.000000</td>
+      <td>2500.000000</td>
+      <td>2500.00000</td>
+      <td>2500.000000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>24.492000</td>
+      <td>42.867872</td>
+      <td>0.48960</td>
+      <td>39.899549</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>14.563366</td>
+      <td>17.665057</td>
+      <td>0.49999</td>
+      <td>6.889043</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>0.000000</td>
+      <td>12.006117</td>
+      <td>0.00000</td>
+      <td>13.531745</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>12.000000</td>
+      <td>27.950608</td>
+      <td>0.00000</td>
+      <td>35.380744</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>24.000000</td>
+      <td>41.268259</td>
+      <td>0.00000</td>
+      <td>39.998665</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>38.000000</td>
+      <td>56.383082</td>
+      <td>1.00000</td>
+      <td>44.571119</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>49.000000</td>
+      <td>95.132215</td>
+      <td>1.00000</td>
+      <td>62.615418</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># save it for replications in R</span>
+<span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s">"~/exchange.csv"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h1 id="correlation">Correlation</h1>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">print</span> <span class="s">"Pearson correlation with Pandas"</span>
+<span class="n">df</span><span class="o">.</span><span class="n">corr</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s">'pearson'</span><span class="p">)</span> <span class="c">#also available ‘kendall’ and ‘spearman’</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Pearson correlation with Pandas
+</code></pre></div></div>
+
+<div>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>cities</th>
+      <th>ice_cream</th>
+      <th>kids</th>
+      <th>temp</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>cities</th>
+      <td>1.000000</td>
+      <td>0.926675</td>
+      <td>-0.016553</td>
+      <td>-0.044868</td>
+    </tr>
+    <tr>
+      <th>ice_cream</th>
+      <td>0.926675</td>
+      <td>1.000000</td>
+      <td>0.034269</td>
+      <td>0.288360</td>
+    </tr>
+    <tr>
+      <th>kids</th>
+      <td>-0.016553</td>
+      <td>0.034269</td>
+      <td>1.000000</td>
+      <td>-0.017963</td>
+    </tr>
+    <tr>
+      <th>temp</th>
+      <td>-0.044868</td>
+      <td>0.288360</td>
+      <td>-0.017963</td>
+      <td>1.000000</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">print</span> <span class="s">"Pearson correlation with Numpy"</span>
+<span class="k">print</span> <span class="n">np</span><span class="o">.</span><span class="n">corrcoef</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">'ice_cream'</span><span class="p">],</span><span class="n">df</span><span class="p">[</span><span class="s">'temp'</span><span class="p">])</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Pearson correlation with Numpy
+[[ 1.          0.28836048]
+ [ 0.28836048  1.        ]]
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">print</span> <span class="s">"Pearson correlation with Scipy"</span>
+<span class="n">r</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">pearsonr</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">'ice_cream'</span><span class="p">],</span><span class="n">df</span><span class="p">[</span><span class="s">'temp'</span><span class="p">])</span>
+<span class="k">print</span> <span class="s">"correlation coefficient: "</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="s">"; p-value: "</span><span class="p">,</span> <span class="n">p</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Pearson correlation with Scipy
+correlation coefficient:  0.28836047698 ; p-value:  4.47496022458e-49
+</code></pre></div></div>
+
+<p>Looks like Scipy is the only way to test for significance</p>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Replicate in R</span><span class="w">
+</span><span class="n">cities</span><span class="w">	   </span><span class="m">1.00000000</span><span class="w">	</span><span class="m">0.92667534</span><span class="w">	</span><span class="m">-0.01655296</span><span class="w">	</span><span class="m">-0.04486818</span><span class="w">
+</span><span class="n">ice_cream</span><span class="w">	 </span><span class="m">0.92667534</span><span class="w">	</span><span class="m">1.00000000</span><span class="w">	</span><span class="m">0.03426892</span><span class="w">	</span><span class="m">0.28836048</span><span class="w">
+</span><span class="n">kids</span><span class="w">	    </span><span class="m">-0.01655296</span><span class="w">	</span><span class="m">0.03426892</span><span class="w">	</span><span class="m">1.00000000</span><span class="w">	</span><span class="m">-0.01796342</span><span class="w">
+</span><span class="n">temp</span><span class="w">	    </span><span class="m">-0.04486818</span><span class="w">	</span><span class="m">0.28836048</span><span class="w">	</span><span class="m">-0.01796342</span><span class="w">	</span><span class="m">1.00000000</span><span class="w">
+</span></code></pre></div></div>
+
+<h1 id="one-sample-t-test">One-sample t-test</h1>
+
+<p>We’ll be using the same dataframe from above.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Using scipy</span>
+<span class="n">t</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">ttest_1samp</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">'ice_cream'</span><span class="p">],</span> <span class="n">popmean</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="k">print</span> <span class="s">"t-value: "</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="s">"; p-value: "</span><span class="p">,</span> <span class="n">p</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>t-value:  121.335222203 ; p-value:  0.0
+</code></pre></div></div>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Replicate in R</span><span class="w">
+
+	</span><span class="n">One</span><span class="w"> </span><span class="n">Sample</span><span class="w"> </span><span class="n">t</span><span class="o">-</span><span class="n">test</span><span class="w">
+
+</span><span class="n">data</span><span class="o">:</span><span class="w">  </span><span class="n">df</span><span class="o">$</span><span class="n">ice_cream</span><span class="w">
+</span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">121.34</span><span class="p">,</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">2499</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="o">-</span><span class="n">value</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="m">2.2e-16</span><span class="w">
+</span><span class="n">alternative</span><span class="w"> </span><span class="n">hypothesis</span><span class="o">:</span><span class="w"> </span><span class="n">true</span><span class="w"> </span><span class="n">mean</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">not</span><span class="w"> </span><span class="n">equal</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="m">0</span><span class="w">
+</span><span class="m">95</span><span class="w"> </span><span class="n">percent</span><span class="w"> </span><span class="n">confidence</span><span class="w"> </span><span class="n">interval</span><span class="o">:</span><span class="w">
+ </span><span class="m">42.17508</span><span class="w"> </span><span class="m">43.56067</span><span class="w">
+</span><span class="n">sample</span><span class="w"> </span><span class="n">estimates</span><span class="o">:</span><span class="w">
+</span><span class="n">mean</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">x</span><span class="w">
+ </span><span class="m">42.86787</span><span class="w">
+</span></code></pre></div></div>
+
+<h1 id="independent-sample-t-test">Independent sample t-test</h1>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># With scipy</span>
+<span class="n">t</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">ttest_ind</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">'ice_cream'</span><span class="p">],</span><span class="n">df</span><span class="p">[</span><span class="s">'temp'</span><span class="p">])</span>
+<span class="k">print</span> <span class="s">"t-value: "</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="s">"; p-value: "</span><span class="p">,</span> <span class="n">p</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>t-value:  7.82751207811 ; p-value:  6.03132649935e-15
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># With statsmodels that also give degrees of freedom</span>
+<span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">df</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">ttest_ind</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">'ice_cream'</span><span class="p">],</span><span class="n">df</span><span class="p">[</span><span class="s">'temp'</span><span class="p">])</span>
+<span class="k">print</span> <span class="s">"t-value: "</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="s">"; p-value: "</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="s">"; df: "</span><span class="p">,</span> <span class="n">df</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>t-value:  7.82751207811 ; p-value:  6.03132649935e-15 ; df:  4998.0
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Statsmodels with an unequal variance that is a default in R</span>
+<span class="c"># Using numpy arrays since df gives an error</span>
+
+<span class="n">t</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">df</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">ttest_ind</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">'ice_cream'</span><span class="p">]),</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s">'temp'</span><span class="p">]),</span>
+                              <span class="n">alternative</span><span class="o">=</span><span class="s">'two-sided'</span><span class="p">,</span> <span class="n">usevar</span><span class="o">=</span><span class="s">'unequal'</span><span class="p">)</span>
+<span class="c"># alternative also accepts 'larger' and 'smaller' as one-sided indications</span>
+<span class="k">print</span> <span class="s">"t-value: "</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="s">"; p-value: "</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="s">"; df: "</span><span class="p">,</span> <span class="n">df</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>t-value:  7.82751207811 ; p-value:  6.68488304875e-15 ; df:  3241.93905035
+</code></pre></div></div>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Replicate in R</span><span class="w">
+
+	</span><span class="n">Welch</span><span class="w"> </span><span class="n">Two</span><span class="w"> </span><span class="n">Sample</span><span class="w"> </span><span class="n">t</span><span class="o">-</span><span class="n">test</span><span class="w">
+
+</span><span class="n">data</span><span class="o">:</span><span class="w">  </span><span class="n">df</span><span class="o">$</span><span class="n">ice_cream</span><span class="w"> </span><span class="n">and</span><span class="w"> </span><span class="n">df</span><span class="o">$</span><span class="n">temp</span><span class="w">
+</span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">7.8275</span><span class="p">,</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">3241.9</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="o">-</span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">6.685e-15</span><span class="w">
+</span><span class="n">alternative</span><span class="w"> </span><span class="n">hypothesis</span><span class="o">:</span><span class="w"> </span><span class="n">true</span><span class="w"> </span><span class="n">difference</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">means</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">not</span><span class="w"> </span><span class="n">equal</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="m">0</span><span class="w">
+</span><span class="m">95</span><span class="w"> </span><span class="n">percent</span><span class="w"> </span><span class="n">confidence</span><span class="w"> </span><span class="n">interval</span><span class="o">:</span><span class="w">
+ </span><span class="m">2.224794</span><span class="w"> </span><span class="m">3.711851</span><span class="w">
+</span><span class="n">sample</span><span class="w"> </span><span class="n">estimates</span><span class="o">:</span><span class="w">
+</span><span class="n">mean</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="n">mean</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">y</span><span class="w">
+ </span><span class="m">42.86787</span><span class="w">  </span><span class="m">39.89955</span><span class="w">
+</span></code></pre></div></div>
+
+<h1 id="ols-regression">OLS Regression</h1>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Finally using an R-like formula :)</span>
+<span class="n">lm</span> <span class="o">=</span> <span class="n">smf</span><span class="o">.</span><span class="n">ols</span><span class="p">(</span><span class="s">'ice_cream ~ temp'</span><span class="p">,</span><span class="n">data</span><span class="o">=</span><span class="n">df</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+<span class="k">print</span> <span class="n">lm</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:              ice_cream   R-squared:                       0.083
+Model:                            OLS   Adj. R-squared:                  0.083
+Method:                 Least Squares   F-statistic:                     226.6
+Date:                Tue, 25 Oct 2016   Prob (F-statistic):           4.47e-49
+Time:                        13:12:17   Log-Likelihood:                -10617.
+No. Observations:                2500   AIC:                         2.124e+04
+Df Residuals:                    2498   BIC:                         2.125e+04
+Df Model:                           1                                         
+Covariance Type:            nonrobust                                         
+==============================================================================
+                 coef    std err          t      P&gt;|t|      [95.0% Conf. Int.]
+------------------------------------------------------------------------------
+Intercept     13.3653      1.989      6.719      0.000         9.465    17.266
+temp           0.7394      0.049     15.052      0.000         0.643     0.836
+==============================================================================
+Omnibus:                      599.927   Durbin-Watson:                   2.017
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):              108.273
+Skew:                           0.056   Prob(JB):                     3.08e-24
+Kurtosis:                       1.987   Cond. No.                         238.
+==============================================================================
+
+Warnings:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+</code></pre></div></div>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Replicate in R</span><span class="w">
+
+</span><span class="n">Call</span><span class="o">:</span><span class="w">
+</span><span class="n">lm</span><span class="p">(</span><span class="n">formula</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ice_cream</span><span class="w"> </span><span class="o">~</span><span class="w"> </span><span class="n">temp</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">)</span><span class="w">
+
+</span><span class="n">Residuals</span><span class="o">:</span><span class="w">
+   </span><span class="n">Min</span><span class="w">     </span><span class="m">1</span><span class="n">Q</span><span class="w"> </span><span class="n">Median</span><span class="w">     </span><span class="m">3</span><span class="n">Q</span><span class="w">    </span><span class="n">Max</span><span class="w">
+</span><span class="m">-37.10</span><span class="w"> </span><span class="m">-14.21</span><span class="w">  </span><span class="m">-0.45</span><span class="w">  </span><span class="m">14.40</span><span class="w">  </span><span class="m">41.70</span><span class="w">
+
+</span><span class="n">Coefficients</span><span class="o">:</span><span class="w">
+            </span><span class="n">Estimate</span><span class="w"> </span><span class="n">Std.</span><span class="w"> </span><span class="n">Error</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="n">Pr</span><span class="p">(</span><span class="o">&gt;|</span><span class="n">t</span><span class="o">|</span><span class="p">)</span><span class="w">    
+</span><span class="p">(</span><span class="n">Intercept</span><span class="p">)</span><span class="w"> </span><span class="m">13.36530</span><span class="w">    </span><span class="m">1.98908</span><span class="w">   </span><span class="m">6.719</span><span class="w"> </span><span class="m">2.25e-11</span><span class="w"> </span><span class="o">***</span><span class="w">
+</span><span class="n">temp</span><span class="w">         </span><span class="m">0.73942</span><span class="w">    </span><span class="m">0.04913</span><span class="w">  </span><span class="m">15.052</span><span class="w">  </span><span class="o">&lt;</span><span class="w"> </span><span class="m">2e-16</span><span class="w"> </span><span class="o">***</span><span class="w">
+</span><span class="o">---</span><span class="w">
+</span><span class="n">Signif.</span><span class="w"> </span><span class="n">codes</span><span class="o">:</span><span class="w">  </span><span class="m">0</span><span class="w"> </span><span class="err">‘</span><span class="o">***</span><span class="err">’</span><span class="w"> </span><span class="m">0.001</span><span class="w"> </span><span class="err">‘</span><span class="o">**</span><span class="err">’</span><span class="w"> </span><span class="m">0.01</span><span class="w"> </span><span class="err">‘</span><span class="o">*</span><span class="err">’</span><span class="w"> </span><span class="m">0.05</span><span class="w"> </span><span class="err">‘</span><span class="n">.</span><span class="err">’</span><span class="w"> </span><span class="m">0.1</span><span class="w"> </span><span class="err">‘</span><span class="w"> </span><span class="err">’</span><span class="w"> </span><span class="m">1</span><span class="w">
+
+</span><span class="n">Residual</span><span class="w"> </span><span class="n">standard</span><span class="w"> </span><span class="n">error</span><span class="o">:</span><span class="w"> </span><span class="m">16.92</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="m">2498</span><span class="w"> </span><span class="n">degrees</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">freedom</span><span class="w">
+</span><span class="n">Multiple</span><span class="w"> </span><span class="n">R</span><span class="o">-</span><span class="n">squared</span><span class="o">:</span><span class="w">  </span><span class="m">0.08315</span><span class="p">,</span><span class="w">	</span><span class="n">Adjusted</span><span class="w"> </span><span class="n">R</span><span class="o">-</span><span class="n">squared</span><span class="o">:</span><span class="w">  </span><span class="m">0.08278</span><span class="w">
+</span><span class="nb">F</span><span class="o">-</span><span class="n">statistic</span><span class="o">:</span><span class="w"> </span><span class="m">226.6</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="n">and</span><span class="w"> </span><span class="m">2498</span><span class="w"> </span><span class="n">DF</span><span class="p">,</span><span class="w">  </span><span class="n">p</span><span class="o">-</span><span class="n">value</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="m">2.2e-16</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#Now using kids as a factor in an interaction</span>
+<span class="n">lm2</span> <span class="o">=</span> <span class="n">smf</span><span class="o">.</span><span class="n">ols</span><span class="p">(</span><span class="s">'ice_cream ~ temp * C(kids)'</span><span class="p">,</span><span class="n">data</span><span class="o">=</span><span class="n">df</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+<span class="k">print</span> <span class="n">lm2</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:              ice_cream   R-squared:                       0.087
+Model:                            OLS   Adj. R-squared:                  0.086
+Method:                 Least Squares   F-statistic:                     79.05
+Date:                Tue, 25 Oct 2016   Prob (F-statistic):           7.53e-49
+Time:                        13:15:08   Log-Likelihood:                -10612.
+No. Observations:                2500   AIC:                         2.123e+04
+Df Residuals:                    2496   BIC:                         2.126e+04
+Df Model:                           3                                         
+Covariance Type:            nonrobust                                         
+=====================================================================================
+                        coef    std err          t      P&gt;|t|      [95.0% Conf. Int.]
+-------------------------------------------------------------------------------------
+Intercept            17.2132      2.800      6.147      0.000        11.722    22.705
+C(kids)[T.1]         -7.8929      3.972     -1.987      0.047       -15.683    -0.103
+temp                  0.6262      0.069      9.080      0.000         0.491     0.761
+temp:C(kids)[T.1]     0.2328      0.098      2.372      0.018         0.040     0.425
+==============================================================================
+Omnibus:                      606.961   Durbin-Watson:                   2.011
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):              108.752
+Skew:                           0.057   Prob(JB):                     2.43e-24
+Kurtosis:                       1.985   Cond. No.                         619.
+==============================================================================
+
+Warnings:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+</code></pre></div></div>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Replicate in R</span><span class="w">
+
+</span><span class="n">Call</span><span class="o">:</span><span class="w">
+</span><span class="n">lm</span><span class="p">(</span><span class="n">formula</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ice_cream</span><span class="w"> </span><span class="o">~</span><span class="w"> </span><span class="n">temp</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">kids</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">)</span><span class="w">
+
+</span><span class="n">Residuals</span><span class="o">:</span><span class="w">
+    </span><span class="n">Min</span><span class="w">      </span><span class="m">1</span><span class="n">Q</span><span class="w">  </span><span class="n">Median</span><span class="w">      </span><span class="m">3</span><span class="n">Q</span><span class="w">     </span><span class="n">Max</span><span class="w">
+</span><span class="m">-37.481</span><span class="w"> </span><span class="m">-14.184</span><span class="w">  </span><span class="m">-0.603</span><span class="w">  </span><span class="m">14.247</span><span class="w">  </span><span class="m">40.521</span><span class="w">
+
+</span><span class="n">Coefficients</span><span class="o">:</span><span class="w">
+            </span><span class="n">Estimate</span><span class="w"> </span><span class="n">Std.</span><span class="w"> </span><span class="n">Error</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="n">Pr</span><span class="p">(</span><span class="o">&gt;|</span><span class="n">t</span><span class="o">|</span><span class="p">)</span><span class="w">    
+</span><span class="p">(</span><span class="n">Intercept</span><span class="p">)</span><span class="w"> </span><span class="m">17.21324</span><span class="w">    </span><span class="m">2.80043</span><span class="w">   </span><span class="m">6.147</span><span class="w"> </span><span class="m">9.19e-10</span><span class="w"> </span><span class="o">***</span><span class="w">
+</span><span class="n">temp</span><span class="w">         </span><span class="m">0.62622</span><span class="w">    </span><span class="m">0.06897</span><span class="w">   </span><span class="m">9.080</span><span class="w">  </span><span class="o">&lt;</span><span class="w"> </span><span class="m">2e-16</span><span class="w"> </span><span class="o">***</span><span class="w">
+</span><span class="n">kids1</span><span class="w">       </span><span class="m">-7.89288</span><span class="w">    </span><span class="m">3.97245</span><span class="w">  </span><span class="m">-1.987</span><span class="w">   </span><span class="m">0.0470</span><span class="w"> </span><span class="o">*</span><span class="w">  
+</span><span class="n">temp</span><span class="o">:</span><span class="n">kids1</span><span class="w">   </span><span class="m">0.23279</span><span class="w">    </span><span class="m">0.09812</span><span class="w">   </span><span class="m">2.372</span><span class="w">   </span><span class="m">0.0177</span><span class="w"> </span><span class="o">*</span><span class="w">  
+</span><span class="o">---</span><span class="w">
+</span><span class="n">Signif.</span><span class="w"> </span><span class="n">codes</span><span class="o">:</span><span class="w">  </span><span class="m">0</span><span class="w"> </span><span class="err">‘</span><span class="o">***</span><span class="err">’</span><span class="w"> </span><span class="m">0.001</span><span class="w"> </span><span class="err">‘</span><span class="o">**</span><span class="err">’</span><span class="w"> </span><span class="m">0.01</span><span class="w"> </span><span class="err">‘</span><span class="o">*</span><span class="err">’</span><span class="w"> </span><span class="m">0.05</span><span class="w"> </span><span class="err">‘</span><span class="n">.</span><span class="err">’</span><span class="w"> </span><span class="m">0.1</span><span class="w"> </span><span class="err">‘</span><span class="w"> </span><span class="err">’</span><span class="w"> </span><span class="m">1</span><span class="w">
+
+</span><span class="n">Residual</span><span class="w"> </span><span class="n">standard</span><span class="w"> </span><span class="n">error</span><span class="o">:</span><span class="w"> </span><span class="m">16.89</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="m">2496</span><span class="w"> </span><span class="n">degrees</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">freedom</span><span class="w">
+</span><span class="n">Multiple</span><span class="w"> </span><span class="n">R</span><span class="o">-</span><span class="n">squared</span><span class="o">:</span><span class="w">  </span><span class="m">0.08677</span><span class="p">,</span><span class="w">	</span><span class="n">Adjusted</span><span class="w"> </span><span class="n">R</span><span class="o">-</span><span class="n">squared</span><span class="o">:</span><span class="w">  </span><span class="m">0.08567</span><span class="w">
+</span><span class="nb">F</span><span class="o">-</span><span class="n">statistic</span><span class="o">:</span><span class="w"> </span><span class="m">79.05</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="m">3</span><span class="w"> </span><span class="n">and</span><span class="w"> </span><span class="m">2496</span><span class="w"> </span><span class="n">DF</span><span class="p">,</span><span class="w">  </span><span class="n">p</span><span class="o">-</span><span class="n">value</span><span class="o">:</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="m">2.2e-16</span><span class="w">
+</span></code></pre></div></div>
+
+<p><strong>More info</strong> <a href="http://statsmodels.sourceforge.net/stable/examples/notebooks/generated/ols.html">http://statsmodels.sourceforge.net/stable/examples/notebooks/generated/ols.html</a></p>
+
+<h1 id="anova">ANOVA</h1>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">table</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">anova_lm</span><span class="p">(</span><span class="n">lm</span><span class="p">,</span> <span class="n">typ</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="c"># Type 2 ANOVA DataFrame</span>
+<span class="k">print</span> <span class="n">table</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>                 sum_sq      df           F        PR(&gt;F)
+temp       64843.702800     1.0  226.551244  4.474960e-49
+Residual  714979.828862  2498.0         NaN           NaN
+</code></pre></div></div>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Replicate in R</span><span class="w">
+
+              </span><span class="n">Df</span><span class="w"> </span><span class="n">Sum</span><span class="w"> </span><span class="n">Sq</span><span class="w"> </span><span class="n">Mean</span><span class="w"> </span><span class="n">Sq</span><span class="w"> </span><span class="nb">F</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="n">Pr</span><span class="p">(</span><span class="o">&gt;</span><span class="nb">F</span><span class="p">)</span><span class="w">    
+</span><span class="n">temp</span><span class="w">           </span><span class="m">1</span><span class="w">  </span><span class="m">64844</span><span class="w">   </span><span class="m">64844</span><span class="w">   </span><span class="m">226.6</span><span class="w"> </span><span class="o">&lt;</span><span class="m">2e-16</span><span class="w"> </span><span class="o">***</span><span class="w">
+</span><span class="n">Residuals</span><span class="w">   </span><span class="m">2498</span><span class="w"> </span><span class="m">714980</span><span class="w">     </span><span class="m">286</span><span class="w">                   
+</span></code></pre></div></div>
+
+<h1 id="generalized-linear-models">Generalized Linear Models</h1>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">mod1</span> <span class="o">=</span> <span class="n">smf</span><span class="o">.</span><span class="n">glm</span><span class="p">(</span><span class="s">'kids ~ ice_cream'</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">family</span><span class="o">=</span><span class="n">sm</span><span class="o">.</span><span class="n">families</span><span class="o">.</span><span class="n">Binomial</span><span class="p">())</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+<span class="k">print</span> <span class="n">mod1</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>                 Generalized Linear Model Regression Results                  
+==============================================================================
+Dep. Variable:                   kids   No. Observations:                 2500
+Model:                            GLM   Df Residuals:                     2498
+Model Family:                Binomial   Df Model:                            1
+Link Function:                  logit   Scale:                             1.0
+Method:                          IRLS   Log-Likelihood:                -1730.9
+Date:                Tue, 25 Oct 2016   Deviance:                       3461.7
+Time:                        13:36:46   Pearson chi2:                 2.50e+03
+No. Iterations:                     6                                         
+==============================================================================
+                 coef    std err          z      P&gt;|z|      [95.0% Conf. Int.]
+------------------------------------------------------------------------------
+Intercept     -0.2081      0.105     -1.979      0.048        -0.414    -0.002
+ice_cream      0.0039      0.002      1.713      0.087        -0.001     0.008
+==============================================================================
+</code></pre></div></div>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Replicate in R</span><span class="w">
+
+</span><span class="n">Call</span><span class="o">:</span><span class="w">
+</span><span class="n">glm</span><span class="p">(</span><span class="n">formula</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">kids</span><span class="w"> </span><span class="o">~</span><span class="w"> </span><span class="n">ice_cream</span><span class="p">,</span><span class="w"> </span><span class="n">family</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"binomial"</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">df</span><span class="p">)</span><span class="w">
+
+</span><span class="n">Deviance</span><span class="w"> </span><span class="n">Residuals</span><span class="o">:</span><span class="w">
+   </span><span class="n">Min</span><span class="w">      </span><span class="m">1</span><span class="n">Q</span><span class="w">  </span><span class="n">Median</span><span class="w">      </span><span class="m">3</span><span class="n">Q</span><span class="w">     </span><span class="n">Max</span><span class="w">  
+</span><span class="m">-1.241</span><span class="w">  </span><span class="m">-1.157</span><span class="w">  </span><span class="m">-1.114</span><span class="w">   </span><span class="m">1.195</span><span class="w">   </span><span class="m">1.246</span><span class="w">  
+
+</span><span class="n">Coefficients</span><span class="o">:</span><span class="w">
+             </span><span class="n">Estimate</span><span class="w"> </span><span class="n">Std.</span><span class="w"> </span><span class="n">Error</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="n">Pr</span><span class="p">(</span><span class="o">&gt;|</span><span class="n">z</span><span class="o">|</span><span class="p">)</span><span class="w">  
+</span><span class="p">(</span><span class="n">Intercept</span><span class="p">)</span><span class="w"> </span><span class="m">-0.208145</span><span class="w">   </span><span class="m">0.105173</span><span class="w">  </span><span class="m">-1.979</span><span class="w">   </span><span class="m">0.0478</span><span class="w"> </span><span class="o">*</span><span class="w">
+</span><span class="n">ice_cream</span><span class="w">    </span><span class="m">0.003884</span><span class="w">   </span><span class="m">0.002268</span><span class="w">   </span><span class="m">1.713</span><span class="w">   </span><span class="m">0.0868</span><span class="w"> </span><span class="n">.</span><span class="w">
+</span><span class="o">---</span><span class="w">
+</span><span class="n">Signif.</span><span class="w"> </span><span class="n">codes</span><span class="o">:</span><span class="w">  </span><span class="m">0</span><span class="w"> </span><span class="err">‘</span><span class="o">***</span><span class="err">’</span><span class="w"> </span><span class="m">0.001</span><span class="w"> </span><span class="err">‘</span><span class="o">**</span><span class="err">’</span><span class="w"> </span><span class="m">0.01</span><span class="w"> </span><span class="err">‘</span><span class="o">*</span><span class="err">’</span><span class="w"> </span><span class="m">0.05</span><span class="w"> </span><span class="err">‘</span><span class="n">.</span><span class="err">’</span><span class="w"> </span><span class="m">0.1</span><span class="w"> </span><span class="err">‘</span><span class="w"> </span><span class="err">’</span><span class="w"> </span><span class="m">1</span><span class="w">
+
+</span><span class="p">(</span><span class="n">Dispersion</span><span class="w"> </span><span class="n">parameter</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">binomial</span><span class="w"> </span><span class="n">family</span><span class="w"> </span><span class="n">taken</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">be</span><span class="w"> </span><span class="m">1</span><span class="p">)</span><span class="w">
+
+    </span><span class="n">Null</span><span class="w"> </span><span class="n">deviance</span><span class="o">:</span><span class="w"> </span><span class="m">3464.7</span><span class="w">  </span><span class="n">on</span><span class="w"> </span><span class="m">2499</span><span class="w">  </span><span class="n">degrees</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">freedom</span><span class="w">
+</span><span class="n">Residual</span><span class="w"> </span><span class="n">deviance</span><span class="o">:</span><span class="w"> </span><span class="m">3461.7</span><span class="w">  </span><span class="n">on</span><span class="w"> </span><span class="m">2498</span><span class="w">  </span><span class="n">degrees</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">freedom</span><span class="w">
+</span><span class="n">AIC</span><span class="o">:</span><span class="w"> </span><span class="m">3465.7</span><span class="w">
+
+</span><span class="n">Number</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">Fisher</span><span class="w"> </span><span class="n">Scoring</span><span class="w"> </span><span class="n">iterations</span><span class="o">:</span><span class="w"> </span><span class="m">3</span><span class="w">
+</span></code></pre></div></div>
+
+<p><strong>More info:</strong> <a href="http://statsmodels.sourceforge.net/stable/glm.html">http://statsmodels.sourceforge.net/stable/glm.html</a> and <a href="http://statsmodels.sourceforge.net/devel/contrasts.html">http://statsmodels.sourceforge.net/devel/contrasts.html</a></p>
+
+<h1 id="linear-mixed-effects">Linear Mixed Effects</h1>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Cold ratings are nested into brands, there is only one random slople - intercept</span>
+<span class="n">model1</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">MixedLM</span><span class="o">.</span><span class="n">from_formula</span><span class="p">(</span><span class="s">"ice_cream ~ temp"</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="n">df</span><span class="p">[</span><span class="s">"cities"</span><span class="p">])</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">reml</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="k">print</span> <span class="n">model1</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>          Mixed Linear Model Regression Results
+========================================================
+Model:            MixedLM Dependent Variable: ice_cream
+No. Observations: 2500    Method:             ML        
+No. Groups:       50      Scale:              10.0311   
+Min. group size:  38      Likelihood:         -6609.5008
+Max. group size:  70      Converged:          Yes       
+Mean group size:  50.0                                  
+--------------------------------------------------------
+              Coef.  Std.Err.   z    P&gt;|z| [0.025 0.975]
+--------------------------------------------------------
+Intercept      8.921    2.360  3.780 0.000  4.296 13.547
+temp           0.851    0.009 91.185 0.000  0.833  0.869
+Intercept RE 271.356   17.322                           
+========================================================
+</code></pre></div></div>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Replicate in R</span><span class="w">
+
+</span><span class="n">Linear</span><span class="w"> </span><span class="n">mixed</span><span class="w"> </span><span class="n">model</span><span class="w"> </span><span class="n">fit</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">maximum</span><span class="w"> </span><span class="n">likelihood</span><span class="w">  </span><span class="p">[</span><span class="s1">'lmerMod'</span><span class="p">]</span><span class="w">
+</span><span class="n">Formula</span><span class="o">:</span><span class="w"> </span><span class="n">ice_cream</span><span class="w"> </span><span class="o">~</span><span class="w"> </span><span class="n">temp</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="m">1</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">cities</span><span class="p">)</span><span class="w">
+   </span><span class="n">Data</span><span class="o">:</span><span class="w"> </span><span class="n">df</span><span class="w">
+
+     </span><span class="n">AIC</span><span class="w">      </span><span class="n">BIC</span><span class="w">   </span><span class="n">logLik</span><span class="w"> </span><span class="n">deviance</span><span class="w"> </span><span class="n">df.resid</span><span class="w">
+ </span><span class="m">13227.0</span><span class="w">  </span><span class="m">13250.3</span><span class="w">  </span><span class="m">-6609.5</span><span class="w">  </span><span class="m">13219.0</span><span class="w">     </span><span class="m">2496</span><span class="w">
+
+</span><span class="n">Scaled</span><span class="w"> </span><span class="n">residuals</span><span class="o">:</span><span class="w">
+    </span><span class="n">Min</span><span class="w">      </span><span class="m">1</span><span class="n">Q</span><span class="w">  </span><span class="n">Median</span><span class="w">      </span><span class="m">3</span><span class="n">Q</span><span class="w">     </span><span class="n">Max</span><span class="w">
+</span><span class="m">-4.5515</span><span class="w"> </span><span class="m">-0.5695</span><span class="w"> </span><span class="m">-0.0070</span><span class="w">  </span><span class="m">0.5589</span><span class="w">  </span><span class="m">3.7772</span><span class="w">
+
+</span><span class="n">Random</span><span class="w"> </span><span class="n">effects</span><span class="o">:</span><span class="w">
+ </span><span class="n">Groups</span><span class="w">   </span><span class="n">Name</span><span class="w">        </span><span class="n">Variance</span><span class="w"> </span><span class="n">Std.Dev.</span><span class="w">
+ </span><span class="n">cities</span><span class="w">   </span><span class="p">(</span><span class="n">Intercept</span><span class="p">)</span><span class="w"> </span><span class="m">271.35</span><span class="w">   </span><span class="m">16.473</span><span class="w">  
+ </span><span class="n">Residual</span><span class="w">              </span><span class="m">10.03</span><span class="w">    </span><span class="m">3.167</span><span class="w">  
+</span><span class="n">Number</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">obs</span><span class="o">:</span><span class="w"> </span><span class="m">2500</span><span class="p">,</span><span class="w"> </span><span class="n">groups</span><span class="o">:</span><span class="w">  </span><span class="n">cities</span><span class="p">,</span><span class="w"> </span><span class="m">50</span><span class="w">
+
+</span><span class="n">Fixed</span><span class="w"> </span><span class="n">effects</span><span class="o">:</span><span class="w">
+            </span><span class="n">Estimate</span><span class="w"> </span><span class="n">Std.</span><span class="w"> </span><span class="n">Error</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="n">value</span><span class="w">
+</span><span class="p">(</span><span class="n">Intercept</span><span class="p">)</span><span class="w"> </span><span class="m">8.921509</span><span class="w">   </span><span class="m">2.360016</span><span class="w">    </span><span class="m">3.78</span><span class="w">
+</span><span class="n">temp</span><span class="w">        </span><span class="m">0.851126</span><span class="w">   </span><span class="m">0.009334</span><span class="w">   </span><span class="m">91.19</span><span class="w">
+
+</span><span class="n">Correlation</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">Fixed</span><span class="w"> </span><span class="n">Effects</span><span class="o">:</span><span class="w">
+     </span><span class="p">(</span><span class="n">Intr</span><span class="p">)</span><span class="w">
+</span><span class="n">temp</span><span class="w"> </span><span class="m">-0.158</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">model2</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">MixedLM</span><span class="o">.</span><span class="n">from_formula</span><span class="p">(</span><span class="s">"ice_cream ~ temp"</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">re_formula</span><span class="o">=</span><span class="s">"temp"</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="n">df</span><span class="p">[</span><span class="s">"cities"</span><span class="p">])</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">reml</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="k">print</span> <span class="n">model2</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>              Mixed Linear Model Regression Results
+=================================================================
+Model:               MixedLM    Dependent Variable:    ice_cream
+No. Observations:    2500       Method:                ML        
+No. Groups:          50         Scale:                 1.8684    
+Min. group size:     38         Likelihood:            -4551.3137
+Max. group size:     70         Converged:             Yes       
+Mean group size:     50.0                                        
+-----------------------------------------------------------------
+                       Coef.  Std.Err.   z    P&gt;|z| [0.025 0.975]
+-----------------------------------------------------------------
+Intercept               8.599    0.173 49.774 0.000  8.261  8.938
+temp                    0.862    0.060 14.433 0.000  0.745  0.980
+Intercept RE            0.151    0.412                           
+Intercept RE x temp RE -0.164    0.073                           
+temp RE                 0.178    0.026                           
+=================================================================
+</code></pre></div></div>
+
+<div class="language-R highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Replicate in R</span><span class="w">
+
+</span><span class="n">Linear</span><span class="w"> </span><span class="n">mixed</span><span class="w"> </span><span class="n">model</span><span class="w"> </span><span class="n">fit</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">maximum</span><span class="w"> </span><span class="n">likelihood</span><span class="w">  </span><span class="p">[</span><span class="s1">'lmerMod'</span><span class="p">]</span><span class="w">
+</span><span class="n">Formula</span><span class="o">:</span><span class="w"> </span><span class="n">ice_cream</span><span class="w"> </span><span class="o">~</span><span class="w"> </span><span class="n">temp</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="m">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">temp</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">cities</span><span class="p">)</span><span class="w">
+   </span><span class="n">Data</span><span class="o">:</span><span class="w"> </span><span class="n">df</span><span class="w">
+
+     </span><span class="n">AIC</span><span class="w">      </span><span class="n">BIC</span><span class="w">   </span><span class="n">logLik</span><span class="w"> </span><span class="n">deviance</span><span class="w"> </span><span class="n">df.resid</span><span class="w">
+  </span><span class="m">9114.6</span><span class="w">   </span><span class="m">9149.6</span><span class="w">  </span><span class="m">-4551.3</span><span class="w">   </span><span class="m">9102.6</span><span class="w">     </span><span class="m">2494</span><span class="w">
+
+</span><span class="n">Scaled</span><span class="w"> </span><span class="n">residuals</span><span class="o">:</span><span class="w">
+     </span><span class="n">Min</span><span class="w">       </span><span class="m">1</span><span class="n">Q</span><span class="w">   </span><span class="n">Median</span><span class="w">       </span><span class="m">3</span><span class="n">Q</span><span class="w">      </span><span class="n">Max</span><span class="w">
+</span><span class="m">-3.06647</span><span class="w"> </span><span class="m">-0.72209</span><span class="w">  </span><span class="m">0.01464</span><span class="w">  </span><span class="m">0.71654</span><span class="w">  </span><span class="m">2.74365</span><span class="w">
+
+</span><span class="n">Random</span><span class="w"> </span><span class="n">effects</span><span class="o">:</span><span class="w">
+ </span><span class="n">Groups</span><span class="w">   </span><span class="n">Name</span><span class="w">        </span><span class="n">Variance</span><span class="w"> </span><span class="n">Std.Dev.</span><span class="w"> </span><span class="n">Corr</span><span class="w">
+ </span><span class="n">cities</span><span class="w">   </span><span class="p">(</span><span class="n">Intercept</span><span class="p">)</span><span class="w"> </span><span class="m">0.1505</span><span class="w">   </span><span class="m">0.3879</span><span class="w">        
+          </span><span class="n">temp</span><span class="w">        </span><span class="m">0.1777</span><span class="w">   </span><span class="m">0.4216</span><span class="w">   </span><span class="m">-1.00</span><span class="w">
+ </span><span class="n">Residual</span><span class="w">             </span><span class="m">1.8684</span><span class="w">   </span><span class="m">1.3669</span><span class="w">        
+</span><span class="n">Number</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">obs</span><span class="o">:</span><span class="w"> </span><span class="m">2500</span><span class="p">,</span><span class="w"> </span><span class="n">groups</span><span class="o">:</span><span class="w">  </span><span class="n">cities</span><span class="p">,</span><span class="w"> </span><span class="m">50</span><span class="w">
+
+</span><span class="n">Fixed</span><span class="w"> </span><span class="n">effects</span><span class="o">:</span><span class="w">
+            </span><span class="n">Estimate</span><span class="w"> </span><span class="n">Std.</span><span class="w"> </span><span class="n">Error</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="n">value</span><span class="w">
+</span><span class="p">(</span><span class="n">Intercept</span><span class="p">)</span><span class="w">  </span><span class="m">8.59958</span><span class="w">    </span><span class="m">0.17196</span><span class="w">   </span><span class="m">50.01</span><span class="w">
+</span><span class="n">temp</span><span class="w">         </span><span class="m">0.86235</span><span class="w">    </span><span class="m">0.05976</span><span class="w">   </span><span class="m">14.43</span><span class="w">
+
+</span><span class="n">Correlation</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">Fixed</span><span class="w"> </span><span class="n">Effects</span><span class="o">:</span><span class="w">
+     </span><span class="p">(</span><span class="n">Intr</span><span class="p">)</span><span class="w">
+</span><span class="n">temp</span><span class="w"> </span><span class="m">-0.381</span><span class="w">
+</span></code></pre></div></div>
+
+<p><strong>More info:</strong> <a href="http://statsmodels.sourceforge.net/stable/mixed_linear.html">http://statsmodels.sourceforge.net/stable/mixed_linear.html</a></p>
+
+<p>Please email me your comments and questions!</p>
+
+  </div>
+
+</article>
+
+      </div>
+    </div>
+
+    <!--
+<footer class="site-footer">
+
+  <div class="wrapper">
+-->
+    <!--<h2 class="footer-heading">Dmitrii Paniukov</h2>-->
+<!--
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>Dmitrii Paniukov</li>
+          <li><a href="mailto:dmitrii.paniukov@ttu.edu">dmitrii.paniukov@ttu.edu</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/dpaniukov"><span class="icon icon--github"><svg viewBox="0 0 16 16"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">dpaniukov</span></a>
+
+          </li>
+          
+
+          
+          <li>
+            <a href="https://twitter.com/DmitriiPaniukov"><span class="icon icon--twitter"><svg viewBox="0 0 16 16"><path fill="#828282" d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27 c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767 c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206 C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271 c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469 c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg>
+</span><span class="username">DmitriiPaniukov</span></a>
+
+          </li>
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+-->
+
+
+  
+
+
+</body></html>

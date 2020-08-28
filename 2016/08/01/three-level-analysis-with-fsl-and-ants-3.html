@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<!-- saved from url=(0083)http://dpaniukov.github.io/2016/08/01/three-level-analysis-with-fsl-and-ants-3.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Three-level analysis with FSL and ANTs in Nipype. Part 3.</title>
+  <meta name="description" content="Today we will be setting up level 3 in a 3-level model with FSL and Nipype, using data from Part 1 and copes from Part 2">
+
+  <link rel="stylesheet" href="./Three-level analysis with FSL and ANTs in Nipype. Part 3._files/main.css">
+  <link rel="canonical" href="https://dpaniukov.github.io/2016/08/01/three-level-analysis-with-fsl-and-ants-3.html">
+  <link rel="alternate" type="application/rss+xml" title="Dmitrii Paniukov" href="https://dpaniukov.github.io/feed.xml">
+  <script async="" src="./Three-level analysis with FSL and ANTs in Nipype. Part 3._files/analytics.js"></script><script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-78889004-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+</head>
+
+
+  <body data-gr-c-s-loaded="true">
+
+    <header class="site-header">
+
+  <div class="wrapper">
+
+    <a href="http://dpaniukov.github.io/"><img width="58px" height="58px" src="./Three-level analysis with FSL and ANTs in Nipype. Part 3._files/dp64.png" alt="DP"></a>
+
+    <nav class="site-nav">
+      <a href="http://dpaniukov.github.io/2016/08/01/three-level-analysis-with-fsl-and-ants-3.html#" class="menu-icon">
+        <svg viewBox="0 0 18 15">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"></path>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"></path>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"></path>
+        </svg>
+      </a>
+      <div class="trigger">
+        
+          
+          <a class="page-link" href="http://dpaniukov.github.io/">Tutorials</a>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+
+      </div>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <article class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">Three-level analysis with FSL and ANTs in Nipype. Part 3.</h1>
+  </header>
+
+  <div class="post-content">
+    <p>Today we will be setting up level 3 in a 3-level model with FSL and Nipype, using data from <a href="https://dpaniukov.github.io/2016/07/03/three-level-analysis-with-fsl-and-ants-1.html">Part 1</a> and copes from <a href="https://dpaniukov.github.io/2016/07/14/three-level-analysis-with-fsl-and-ants-2.html">Part 2</a></p>
+
+<p>Level 3 setup is very similar to levels 1 and 2. At the beginning, we will be importing some useful libraries and setting up the project variables.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="c">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="p">,</span> <span class="n">sys</span>                                  <span class="c"># system functions</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.io</span> <span class="k">as</span> <span class="n">nio</span>           <span class="c"># Data i/o</span>
+<span class="kn">from</span> <span class="nn">nipype.interfaces.io</span> <span class="kn">import</span> <span class="n">DataSink</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.fsl</span> <span class="k">as</span> <span class="n">fsl</span>          <span class="c"># fsl</span>
+<span class="kn">import</span> <span class="nn">nipype.pipeline.engine</span> <span class="k">as</span> <span class="n">pe</span>          <span class="c"># pypeline engine</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="n">util</span>     <span class="c"># utility</span>
+<span class="kn">import</span> <span class="nn">nipype.algorithms.modelgen</span> <span class="k">as</span> <span class="n">model</span>   <span class="c"># model generation</span>
+<span class="kn">import</span> <span class="nn">errno</span>
+
+<span class="n">fsl</span><span class="o">.</span><span class="n">FSLCommand</span><span class="o">.</span><span class="n">set_default_output_type</span><span class="p">(</span><span class="s">'NIFTI_GZ'</span><span class="p">)</span>
+
+<span class="s">"""
+Project info
+"""</span>
+<span class="c"># In case you have only one cope at level 2, specify it on the input anyway.</span>
+<span class="c">#Cope number from level 1</span>
+<span class="n">lvl1_cope</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="c">#Cope number from level 2</span>
+<span class="n">lvl2_cope</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+
+<span class="n">project_dir</span><span class="o">=</span><span class="s">"/mnt/net/LaCie/Analysis/RuleSwitch/"</span>
+<span class="n">work_dir</span><span class="o">=</span><span class="s">"/mnt/net/LaCie/scratch/RuleSwitch/"</span>
+
+<span class="n">model_id</span><span class="o">=</span><span class="s">'_1'</span>
+<span class="n">task_id</span><span class="o">=</span><span class="mi">1</span>
+<span class="n">template_brain</span> <span class="o">=</span> <span class="n">fsl</span><span class="o">.</span><span class="n">Info</span><span class="o">.</span><span class="n">standard_image</span><span class="p">(</span><span class="s">'MNI152_T1_2mm_brain.nii.gz'</span><span class="p">)</span>
+
+<span class="c"># The directory where we can find the level 2 output</span>
+<span class="n">l12_out_dir</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span><span class="s">"level2s"</span><span class="p">,</span><span class="s">"model"</span><span class="o">+</span><span class="n">model_id</span><span class="p">)</span>
+
+<span class="n">wf</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">'wf'</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">base_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">work_dir</span><span class="p">,</span><span class="s">"wdir"</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">model_id</span><span class="p">)</span><span class="o">+</span><span class="s">"lvl3"</span><span class="p">,</span><span class="s">"copes_"</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">lvl1_cope</span><span class="p">)</span><span class="o">+</span><span class="s">"_"</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">lvl2_cope</span><span class="p">))</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="p">{</span><span class="s">"execution"</span><span class="p">:</span> <span class="p">{</span><span class="s">"crashdump_dir"</span><span class="p">:</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span><span class="s">'crashdumps'</span><span class="p">)}}</span></code></pre></figure>
+
+<p>Below we will be getting copes, varcopes and masks for subjects. Note there will be just two subjects, but in the real project, there will be many more. Also, recall that in the previous parts of the tutorial we had two tasks. The level 2 contrasts were: task1&gt;baseline, task2&gt;baseline, and task1&gt;task2. Hence the copes were saved appropriately.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">subj_copes</span><span class="o">=</span><span class="p">[]</span>
+<span class="n">subj_varcopes</span><span class="o">=</span><span class="p">[]</span>
+<span class="k">if</span> <span class="n">lvl2_cope</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span> <span class="c">#task1</span>
+    <span class="n">subj_copes</span><span class="o">=</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l12_out_dir</span><span class="p">,</span><span class="s">"Subject001"</span><span class="p">,</span><span class="s">"stats_dir"</span><span class="p">,</span><span class="s">"_subject_id_Subject001"</span><span class="p">,</span><span class="s">"_flameo"</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">lvl1_cope</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="s">"stats"</span><span class="p">,</span><span class="s">"cope1.nii.gz"</span><span class="p">),</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l12_out_dir</span><span class="p">,</span><span class="s">"Subject002"</span><span class="p">,</span><span class="s">"stats_dir"</span><span class="p">,</span><span class="s">"_subject_id_Subject002"</span><span class="p">,</span><span class="s">"_flameo"</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">lvl1_cope</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="s">"stats"</span><span class="p">,</span><span class="s">"cope2.nii.gz"</span><span class="p">)]</span>
+
+    <span class="n">subj_varcopes</span><span class="o">=</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l12_out_dir</span><span class="p">,</span><span class="s">"Subject001"</span><span class="p">,</span><span class="s">"stats_dir"</span><span class="p">,</span><span class="s">"_subject_id_Subject001"</span><span class="p">,</span><span class="s">"_flameo"</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">lvl1_cope</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="s">"stats"</span><span class="p">,</span><span class="s">"varcope1.nii.gz"</span><span class="p">),</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l12_out_dir</span><span class="p">,</span><span class="s">"Subject002"</span><span class="p">,</span><span class="s">"stats_dir"</span><span class="p">,</span><span class="s">"_subject_id_Subject002"</span><span class="p">,</span><span class="s">"_flameo"</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">lvl1_cope</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="s">"stats"</span><span class="p">,</span><span class="s">"varcope2.nii.gz"</span><span class="p">)]</span>
+
+
+<span class="k">elif</span> <span class="n">lvl2_cope</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span> <span class="c">#task2</span>
+    <span class="n">subj_copes</span><span class="o">=</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l12_out_dir</span><span class="p">,</span><span class="s">"Subject001"</span><span class="p">,</span><span class="s">"stats_dir"</span><span class="p">,</span><span class="s">"_subject_id_Subject001"</span><span class="p">,</span><span class="s">"_flameo"</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">lvl1_cope</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="s">"stats"</span><span class="p">,</span><span class="s">"cope2.nii.gz"</span><span class="p">),</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l12_out_dir</span><span class="p">,</span><span class="s">"Subject002"</span><span class="p">,</span><span class="s">"stats_dir"</span><span class="p">,</span><span class="s">"_subject_id_Subject002"</span><span class="p">,</span><span class="s">"_flameo"</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">lvl1_cope</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="s">"stats"</span><span class="p">,</span><span class="s">"cope1.nii.gz"</span><span class="p">)]</span>
+
+    <span class="n">subj_varcopes</span><span class="o">=</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l12_out_dir</span><span class="p">,</span><span class="s">"Subject001"</span><span class="p">,</span><span class="s">"stats_dir"</span><span class="p">,</span><span class="s">"_subject_id_Subject001"</span><span class="p">,</span><span class="s">"_flameo"</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">lvl1_cope</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="s">"stats"</span><span class="p">,</span><span class="s">"varcope2.nii.gz"</span><span class="p">),</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l12_out_dir</span><span class="p">,</span><span class="s">"Subject002"</span><span class="p">,</span><span class="s">"stats_dir"</span><span class="p">,</span><span class="s">"_subject_id_Subject002"</span><span class="p">,</span><span class="s">"_flameo"</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">lvl1_cope</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="s">"stats"</span><span class="p">,</span><span class="s">"varcope1.nii.gz"</span><span class="p">)]</span>
+
+<span class="k">elif</span> <span class="n">lvl2_cope</span><span class="o">==</span><span class="mi">3</span><span class="p">:</span> <span class="c">#task1&gt;task2</span>
+    <span class="n">subj_copes</span><span class="o">=</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l12_out_dir</span><span class="p">,</span><span class="s">"Subject001"</span><span class="p">,</span><span class="s">"stats_dir"</span><span class="p">,</span><span class="s">"_subject_id_Subject001"</span><span class="p">,</span><span class="s">"_flameo"</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">lvl1_cope</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="s">"stats"</span><span class="p">,</span><span class="s">"cope3.nii.gz"</span><span class="p">),</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l12_out_dir</span><span class="p">,</span><span class="s">"Subject002"</span><span class="p">,</span><span class="s">"stats_dir"</span><span class="p">,</span><span class="s">"_subject_id_Subject002"</span><span class="p">,</span><span class="s">"_flameo"</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">lvl1_cope</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="s">"stats"</span><span class="p">,</span><span class="s">"cope4.nii.gz"</span><span class="p">)]</span>
+
+    <span class="n">subj_varcopes</span><span class="o">=</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l12_out_dir</span><span class="p">,</span><span class="s">"Subject001"</span><span class="p">,</span><span class="s">"stats_dir"</span><span class="p">,</span><span class="s">"_subject_id_Subject001"</span><span class="p">,</span><span class="s">"_flameo"</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">lvl1_cope</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="s">"stats"</span><span class="p">,</span><span class="s">"varcope3.nii.gz"</span><span class="p">),</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l12_out_dir</span><span class="p">,</span><span class="s">"Subject002"</span><span class="p">,</span><span class="s">"stats_dir"</span><span class="p">,</span><span class="s">"_subject_id_Subject002"</span><span class="p">,</span><span class="s">"_flameo"</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">lvl1_cope</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="s">"stats"</span><span class="p">,</span><span class="s">"varcope4.nii.gz"</span><span class="p">)]</span>
+
+<span class="n">subj_masks</span><span class="o">=</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l12_out_dir</span><span class="p">,</span><span class="s">"Subject001"</span><span class="p">,</span><span class="s">"stats_dir"</span><span class="p">,</span><span class="s">"_subject_id_Subject001"</span><span class="p">,</span><span class="s">"_flameo"</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">lvl1_cope</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="s">"stats"</span><span class="p">,</span><span class="s">"mask.nii.gz"</span><span class="p">),</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">l12_out_dir</span><span class="p">,</span><span class="s">"Subject002"</span><span class="p">,</span><span class="s">"stats_dir"</span><span class="p">,</span><span class="s">"_subject_id_Subject002"</span><span class="p">,</span><span class="s">"_flameo"</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">lvl1_cope</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="s">"stats"</span><span class="p">,</span><span class="s">"mask.nii.gz"</span><span class="p">)]</span></code></pre></figure>
+
+<p>Getting subject info. Do not forget that we have to have the condition_key_l3.txt file and task_contrasts_l3.txt files with condition and task info.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="k">def</span> <span class="nf">get_subjectinfo</span><span class="p">(</span><span class="n">subj_list</span><span class="p">,</span> <span class="n">base_dir</span><span class="p">,</span> <span class="n">task_id</span><span class="p">,</span> <span class="n">model_id</span><span class="p">):</span>
+    <span class="c">#from glob import glob</span>
+    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+
+    <span class="n">evs_l3</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">ev001</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">subj_list</span><span class="p">))</span>
+
+    <span class="c">#Conditions for level 3</span>
+    <span class="n">condition_info</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cond_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_dir</span><span class="p">,</span> <span class="s">'models'</span><span class="p">,</span> <span class="s">'model</span><span class="si">%</span><span class="s">s'</span> <span class="o">%</span> <span class="n">model_id</span><span class="p">,</span>
+                             <span class="s">'condition_key_l3.txt'</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">cond_file</span><span class="p">,</span> <span class="s">'rt'</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">fp</span><span class="p">:</span>
+            <span class="n">info</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="n">condition_info</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">info</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">info</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s">' '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="mi">2</span><span class="p">:])])</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">condition_info</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="nb">ValueError</span><span class="p">(</span><span class="s">'No condition info found in </span><span class="si">%</span><span class="s">s'</span> <span class="o">%</span> <span class="n">cond_file</span><span class="p">)</span>
+    <span class="n">taskinfo</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">condition_info</span><span class="p">)</span>
+    <span class="n">n_tasks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">taskinfo</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]))</span>
+    <span class="n">conds</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">task_id</span> <span class="o">&gt;</span> <span class="n">n_tasks</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="nb">ValueError</span><span class="p">(</span><span class="s">'Task id </span><span class="si">%</span><span class="s">d does not exist'</span> <span class="o">%</span> <span class="n">task_id</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_tasks</span><span class="p">):</span>
+        <span class="n">taskidx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">taskinfo</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">'task</span><span class="si">%03</span><span class="s">d'</span> <span class="o">%</span> <span class="p">(</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">conds</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">condition</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">' '</span><span class="p">,</span> <span class="s">'_'</span><span class="p">)</span> <span class="k">for</span> <span class="n">condition</span>
+                      <span class="ow">in</span> <span class="n">taskinfo</span><span class="p">[</span><span class="n">taskidx</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="p">]])</span>
+
+    <span class="k">return</span> <span class="n">task_id</span><span class="p">,</span> <span class="n">evs_l3</span><span class="p">,</span> <span class="n">conds</span><span class="p">[</span><span class="n">task_id</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+
+<span class="n">subjinfo</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s">'subj_list'</span><span class="p">,</span><span class="s">'base_dir'</span><span class="p">,</span> <span class="s">'task_id'</span><span class="p">,</span> <span class="s">'model_id'</span><span class="p">],</span>
+                                <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s">'task_id'</span><span class="p">,</span><span class="s">'evs_l3'</span><span class="p">,</span><span class="s">'conds'</span><span class="p">],</span>
+                                <span class="n">function</span><span class="o">=</span><span class="n">get_subjectinfo</span><span class="p">),</span>
+                       <span class="n">name</span><span class="o">=</span><span class="s">'subjectinfo'</span><span class="p">)</span>
+<span class="n">subjinfo</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">base_dir</span> <span class="o">=</span> <span class="n">project_dir</span>
+<span class="n">subjinfo</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">task_id</span> <span class="o">=</span> <span class="n">task_id</span>
+<span class="n">subjinfo</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">model_id</span> <span class="o">=</span> <span class="n">model_id</span>
+<span class="n">subjinfo</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">subj_list</span> <span class="o">=</span> <span class="n">subj_copes</span></code></pre></figure>
+
+<p>Getting data</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">datasource</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">nio</span><span class="o">.</span><span class="n">DataGrabber</span><span class="p">(</span><span class="n">infields</span><span class="o">=</span><span class="p">[</span><span class="s">'model_id'</span><span class="p">],</span> <span class="n">outfields</span><span class="o">=</span><span class="p">[</span><span class="s">'contrasts_l3'</span><span class="p">]),</span> <span class="n">name</span><span class="o">=</span><span class="s">'grabber'</span><span class="p">)</span>
+<span class="n">datasource</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">base_directory</span> <span class="o">=</span> <span class="n">project_dir</span>
+<span class="n">datasource</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">template</span> <span class="o">=</span> <span class="s">'*'</span>
+<span class="n">datasource</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">field_template</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">contrasts_l3</span><span class="o">=</span><span class="s">'models/model</span><span class="si">%</span><span class="s">s/task_contrasts_l3.txt'</span><span class="p">)</span>
+<span class="n">datasource</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">template_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">contrasts_l3</span><span class="o">=</span><span class="p">[[</span><span class="s">'model_id'</span><span class="p">]])</span>
+<span class="n">datasource</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">sort_filelist</span><span class="o">=</span><span class="bp">True</span>
+<span class="n">datasource</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span></code></pre></figure>
+
+<p>Like in level 2, merging the copes, varcopes and masks</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">copemerge</span>    <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">Merge</span><span class="p">(</span><span class="n">dimension</span><span class="o">=</span><span class="s">'t'</span><span class="p">),</span>
+                          <span class="n">name</span><span class="o">=</span><span class="s">"copemerge"</span><span class="p">)</span>
+
+<span class="n">varcopemerge</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">Merge</span><span class="p">(</span><span class="n">dimension</span><span class="o">=</span><span class="s">'t'</span><span class="p">),</span>
+                       <span class="n">name</span><span class="o">=</span><span class="s">"varcopemerge"</span><span class="p">)</span>
+
+<span class="n">maskemerge</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">Merge</span><span class="p">(</span><span class="n">dimension</span><span class="o">=</span><span class="s">'t'</span><span class="p">),</span>
+                       <span class="n">name</span><span class="o">=</span><span class="s">"maskemerge"</span><span class="p">)</span>
+
+<span class="n">copemerge</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">in_files</span><span class="o">=</span><span class="n">subj_copes</span>
+<span class="n">varcopemerge</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">in_files</span><span class="o">=</span><span class="n">subj_varcopes</span>
+<span class="n">maskemerge</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">in_files</span><span class="o">=</span><span class="n">subj_masks</span></code></pre></figure>
+
+<p>Setup a set of contrasts for level 3</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="k">def</span> <span class="nf">get_contrasts_l3</span><span class="p">(</span><span class="n">contrast_file</span><span class="p">,</span> <span class="n">task_id</span><span class="p">,</span> <span class="n">conds</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+    <span class="n">contrast_def</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">genfromtxt</span><span class="p">(</span><span class="n">contrast_file</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">contrast_def</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">contrast_def</span> <span class="o">=</span> <span class="n">contrast_def</span><span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">contrasts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">contrast_def</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s">'task</span><span class="si">%03</span><span class="s">d'</span> <span class="o">%</span> <span class="n">task_id</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">con</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s">'T'</span><span class="p">,</span> <span class="p">[</span><span class="s">'ev</span><span class="si">%03</span><span class="s">d'</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>  <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">conds</span><span class="p">))],</span>
+               <span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()]</span>
+        <span class="n">contrasts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">con</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">contrasts</span>
+
+<span class="n">contrastgen_l3</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s">'contrast_file'</span><span class="p">,</span>
+                                                <span class="s">'task_id'</span><span class="p">,</span> <span class="s">'conds'</span><span class="p">],</span>
+                                   <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s">'contrasts'</span><span class="p">],</span>
+                                   <span class="n">function</span><span class="o">=</span><span class="n">get_contrasts_l3</span><span class="p">),</span>
+                      <span class="n">name</span><span class="o">=</span><span class="s">'contrastgen_l3'</span><span class="p">)</span>
+
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">subjinfo</span><span class="p">,</span> <span class="s">'conds'</span><span class="p">,</span> <span class="n">contrastgen_l3</span><span class="p">,</span> <span class="s">'conds'</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">datasource</span><span class="p">,</span> <span class="s">'contrasts_l3'</span><span class="p">,</span> <span class="n">contrastgen_l3</span><span class="p">,</span> <span class="s">'contrast_file'</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">subjinfo</span><span class="p">,</span> <span class="s">'task_id'</span><span class="p">,</span> <span class="n">contrastgen_l3</span><span class="p">,</span> <span class="s">'task_id'</span><span class="p">)</span></code></pre></figure>
+
+<p>Use MultipleRegressDesign to generate subject and condition
+specific level 3 model design files</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">level3model</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">MultipleRegressDesign</span><span class="p">(),</span>
+                      <span class="n">name</span><span class="o">=</span><span class="s">'l3model'</span><span class="p">)</span>
+
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">contrastgen_l3</span><span class="p">,</span> <span class="s">'contrasts'</span><span class="p">,</span> <span class="n">level3model</span><span class="p">,</span> <span class="s">'contrasts'</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">subjinfo</span><span class="p">,</span> <span class="s">'evs_l3'</span><span class="p">,</span> <span class="n">level3model</span><span class="p">,</span> <span class="s">'regressors'</span><span class="p">)</span></code></pre></figure>
+
+<p>Saving</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">datasink</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">nio</span><span class="o">.</span><span class="n">DataSink</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s">'sinker'</span><span class="p">)</span>
+<span class="n">datasink</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">base_directory</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="s">"level3s"</span><span class="p">,</span><span class="s">"model"</span><span class="o">+</span><span class="n">model_id</span><span class="p">,</span><span class="s">"copes_"</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">lvl1_cope</span><span class="p">)</span><span class="o">+</span><span class="s">"_"</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">lvl2_cope</span><span class="p">))</span>
+
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">copemerge</span><span class="p">,</span> <span class="s">'merged_file'</span><span class="p">,</span> <span class="n">datasink</span><span class="p">,</span> <span class="s">'copes_merged'</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">level3model</span><span class="p">,</span> <span class="s">'design_con'</span><span class="p">,</span> <span class="n">datasink</span><span class="p">,</span> <span class="s">'design_con'</span><span class="p">)</span>
+<span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">level3model</span><span class="p">,</span> <span class="s">'design_mat'</span><span class="p">,</span> <span class="n">datasink</span><span class="p">,</span> <span class="s">'design_mat'</span><span class="p">)</span></code></pre></figure>
+
+<p>Running</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">results</span> <span class="o">=</span> <span class="n">wf</span><span class="o">.</span><span class="n">run</span><span class="p">()</span></code></pre></figure>
+
+<p>After it’s done running, we need to use FSL’s <code class="highlighter-rouge">randomise</code> to get pretty brain pictures. In <code class="highlighter-rouge">randomise</code> we will be using standard MNI brain mask from FSL, which copied to the project directory/masks/WB.nii.gz, although you can use the mask from the level 3 above (and my goal was to show you how to make it in case you do not want to use the MNI mask). Below there are two <code class="highlighter-rouge">randomise</code> commands for two copes. This is just an example because we should be randomizing all the copes we created.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c">#!/bin/bash</span>
+<span class="nb">set </span><span class="nv">proj_dir</span><span class="o">=</span><span class="s2">"/mnt/net/LaCie/Analysis/RuleSwitch/"</span>
+
+mkdir <span class="k">${</span><span class="nv">proj_dir</span><span class="k">}</span>level3s/model_1/randomized
+
+randomise <span class="nt">-i</span> <span class="k">${</span><span class="nv">proj_dir</span><span class="k">}</span>level3s/model_1/copes_1_1/copes_merged/cope1_merged.nii.gz <span class="nt">-m</span> <span class="k">${</span><span class="nv">proj_dir</span><span class="k">}</span>masks/WB.nii.gz <span class="nt">-d</span> <span class="k">${</span><span class="nv">proj_dir</span><span class="k">}</span>level3s/model_1/copes_1_1/design_mat/design.mat <span class="nt">-t</span> <span class="k">${</span><span class="nv">proj_dir</span><span class="k">}</span>level3s/model_1/copes_1_1/design_con/design.con <span class="nt">-o</span> <span class="k">${</span><span class="nv">proj_dir</span><span class="k">}</span>level3s/model_1/randomized/rand_1_1 <span class="nt">-v</span> 8 <span class="nt">-C</span> 2.49 &amp;
+
+randomise <span class="nt">-i</span> <span class="k">${</span><span class="nv">proj_dir</span><span class="k">}</span>level3s/model_1/copes_1_2/copes_merged/cope2_merged.nii.gz <span class="nt">-m</span> <span class="k">${</span><span class="nv">proj_dir</span><span class="k">}</span>masks/WB.nii.gz <span class="nt">-d</span> <span class="k">${</span><span class="nv">proj_dir</span><span class="k">}</span>level3s/model_1/copes_1_2/design_mat/design.mat <span class="nt">-t</span> <span class="k">${</span><span class="nv">proj_dir</span><span class="k">}</span>level3s/model_1/copes_1_2/design_con/design.con <span class="nt">-o</span> <span class="k">${</span><span class="nv">proj_dir</span><span class="k">}</span>level3s/model_1/randomized/rand_1_2 <span class="nt">-v</span> 8 <span class="nt">-C</span> 2.49 &amp;</code></pre></figure>
+
+<p>I would like to thank Dr. Tyler Davis for his guidance and help with FSL and quality checking. Of course, all possible inaccuracies in the code are mine.</p>
+
+
+  </div>
+
+</article>
+
+      </div>
+    </div>
+
+    <!--
+<footer class="site-footer">
+
+  <div class="wrapper">
+-->
+    <!--<h2 class="footer-heading">Dmitrii Paniukov</h2>-->
+<!--
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>Dmitrii Paniukov</li>
+          <li><a href="mailto:dmitrii.paniukov@ttu.edu">dmitrii.paniukov@ttu.edu</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/dpaniukov"><span class="icon icon--github"><svg viewBox="0 0 16 16"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">dpaniukov</span></a>
+
+          </li>
+          
+
+          
+          <li>
+            <a href="https://twitter.com/DmitriiPaniukov"><span class="icon icon--twitter"><svg viewBox="0 0 16 16"><path fill="#828282" d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27 c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767 c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206 C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271 c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469 c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg>
+</span><span class="username">DmitriiPaniukov</span></a>
+
+          </li>
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+-->
+
+
+  
+
+
+</body></html>
